@@ -1,9 +1,11 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { analyze } from '../analysis/pipeline';
-import type { AnalysisInput, AnalysisResult, Attempt, Baseline } from '../model/types';
+import { targetTimeSplitSet } from '../analysis/splitSets';
+import type { AnalysisInput, AnalysisResult, Attempt, Baseline, SplitSet } from '../model/types';
 import { UnsupportedFileError } from '../parsers';
-import { loadFixture } from '../test/fixtures';
+import { PRO_10K_SPLIT_SET, loadFixture } from '../test/fixtures';
+import { ATTEMPT_PALETTE } from '../theme';
 import { analyzeInWorker, parseInWorker } from '../worker/client';
 import { THEME_KEY, UNITS_KEY, createAppStore } from './useStore';
 
@@ -124,13 +126,6 @@ describe('data state', () => {
     store.getState().dismissError(1);
     expect(store.getState().errors).toEqual(['a', 'c']);
   });
-
-  it('unimplemented data actions name their task', () => {
-    const s = createAppStore().getState();
-    expect(() => s.addSplitSet({ name: '', markers: [], officialDistance: null, interpolation: 'gap' })).toThrow(
-      'Not implemented: task 21',
-    );
-  });
 });
 
 describe('data actions', () => {
@@ -208,5 +203,88 @@ describe('data actions', () => {
     expect(s.attempts[0]).toMatchObject({ label: 'Second go', color: '#123456' });
     expect(s.analysis!.attempts[0]).toMatchObject({ label: 'Second go', color: '#123456' });
     expect(analyzeInWorker).not.toHaveBeenCalled();
+  });
+});
+
+describe('split-set actions', () => {
+  const files = (...names: string[]) => names.map((n) => new File([], n));
+  const target = targetTimeSplitSet(10_000, 2400, 'Target');
+  const ready = (store: ReturnType<typeof createAppStore>) =>
+    vi.waitFor(() => expect(store.getState().status).toBe('ready'));
+
+  it('the first split set becomes a custom distance baseline ending at its last marker', async () => {
+    const store = createAppStore();
+    const id = store.getState().addSplitSet(PRO_10K_SPLIT_SET);
+    expect(store.getState().baseline).toEqual({ kind: 'distance', attemptId: id, preset: 'custom', distance: 10_000 });
+    expect(store.getState().attempts).toEqual([
+      { id, kind: 'splits', label: 'Pro 10K', color: ATTEMPT_PALETTE[0], splitSet: PRO_10K_SPLIT_SET },
+    ]);
+    await ready(store);
+    expect(store.getState().analysis!.attempts.map((a) => a.attemptId)).toEqual([id]);
+    expect(store.getState().analysis!.warnings).toEqual([]);
+  });
+
+  it('later split sets join the existing baseline with their own label and colour', async () => {
+    const store = createAppStore();
+    const first = store.getState().addSplitSet(target);
+    const second = store.getState().addSplitSet(PRO_10K_SPLIT_SET, 'Kipchoge');
+    await ready(store);
+    const s = store.getState();
+    expect(s.baseline!.attemptId).toBe(first);
+    expect(s.focusAttemptId).toBe(second);
+    expect(s.attempts[1]).toMatchObject({ label: 'Kipchoge', color: ATTEMPT_PALETTE[1] });
+    expect(s.analysis!.attempts.map((a) => a.attemptId)).toEqual([first, second]);
+  });
+
+  it('a split set added to GPS attempts keeps their course baseline', async () => {
+    const store = createAppStore();
+    await store.getState().addFiles(files('trail-2024-head.gpx', 'trail-2025-head.gpx'));
+    const baseline = store.getState().baseline;
+    const id = store.getState().addSplitSet(target);
+    expect(store.getState().baseline).toEqual(baseline);
+    await vi.waitFor(() => expect(store.getState().analysis!.attempts.map((a) => a.attemptId)).toContain(id));
+  });
+
+  it('updateSplitSet replaces the set and re-analyses', async () => {
+    const store = createAppStore();
+    store.getState().addSplitSet(target);
+    const id = store.getState().addSplitSet(PRO_10K_SPLIT_SET);
+    await ready(store);
+    const slower = { ...PRO_10K_SPLIT_SET, markers: [{ distance: 10_000, time: 2700 }] };
+    store.getState().updateSplitSet(id, slower);
+    expect(store.getState().attempts[1]).toMatchObject({ id, label: 'Pro 10K', splitSet: slower });
+    await vi.waitFor(() => {
+      const delta = store.getState().analysis!.attempts[1]!.delta!;
+      expect(delta[delta.length - 1]).toBeCloseTo(300, 9);
+    });
+  });
+
+  it('rejects an invalid split set', () => {
+    const store = createAppStore();
+    const invalid: SplitSet = { name: '', markers: [], officialDistance: null, interpolation: 'gap' };
+    expect(() => store.getState().addSplitSet(invalid)).toThrow(RangeError);
+    expect(store.getState()).toMatchObject({ attempts: [], baseline: null, status: 'idle' });
+  });
+
+  it('removing a distance baseline falls back to the earliest GPS attempt', async () => {
+    const store = createAppStore();
+    const id = store.getState().addSplitSet(target);
+    await store.getState().addFiles(files('trail-2025-head.gpx', 'trail-2024-head.gpx'));
+    expect(store.getState().baseline!.kind).toBe('distance');
+    const a2024 = store.getState().attempts[2]!;
+    store.getState().removeAttempt(id);
+    expect(store.getState().baseline).toEqual({ kind: 'course', attemptId: a2024.id });
+    await ready(store);
+    expect(store.getState().analysis!.warnings.map((w) => w.code)).not.toContain('invalid-baseline');
+  });
+
+  it('removing a distance baseline with no GPS attempts left clears the baseline', async () => {
+    const store = createAppStore();
+    const id = store.getState().addSplitSet(target);
+    store.getState().addSplitSet(PRO_10K_SPLIT_SET);
+    await ready(store);
+    store.getState().removeAttempt(id);
+    expect(store.getState()).toMatchObject({ baseline: null, analysis: null, status: 'ready' });
+    expect(store.getState().attempts.map((a) => a.label)).toEqual(['Pro 10K']);
   });
 });
