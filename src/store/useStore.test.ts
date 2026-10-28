@@ -1,7 +1,24 @@
 // @vitest-environment jsdom
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { AnalysisResult, Attempt, Baseline } from '../model/types';
+import { analyze } from '../analysis/pipeline';
+import type { AnalysisInput, AnalysisResult, Attempt, Baseline } from '../model/types';
+import { UnsupportedFileError } from '../parsers';
+import { loadFixture } from '../test/fixtures';
+import { analyzeInWorker, parseInWorker } from '../worker/client';
 import { THEME_KEY, UNITS_KEY, createAppStore } from './useStore';
+
+// The worker runs in-process: parsing hands back the GPX fixtures by file name.
+vi.mock('../worker/client', () => ({ parseInWorker: vi.fn(), analyzeInWorker: vi.fn() }));
+const gpx = loadFixture('gpx-two-attempts');
+const byFileName = new Map(gpx.attempts.map((a) => [a.activity.fileName, a.activity]));
+beforeEach(() => {
+  vi.mocked(parseInWorker).mockImplementation(async (file) => {
+    const activity = byFileName.get(file.name);
+    if (!activity) throw new UnsupportedFileError(file.name);
+    return activity;
+  });
+  vi.mocked(analyzeInWorker).mockImplementation(async (input) => analyze(input));
+});
 
 beforeEach(() => localStorage.clear());
 afterEach(() => vi.restoreAllMocks());
@@ -108,15 +125,88 @@ describe('data state', () => {
     expect(store.getState().errors).toEqual(['a', 'c']);
   });
 
-  it('unimplemented data actions name their task', async () => {
+  it('unimplemented data actions name their task', () => {
     const s = createAppStore().getState();
-    await expect(s.addFiles([])).rejects.toThrow('Not implemented: task 09');
-    expect(() => s.setBaseline({ kind: 'course', attemptId: 'x' })).toThrow('Not implemented: task 09');
-    expect(() => s.setSettings({})).toThrow('Not implemented: task 09');
-    expect(() => s.removeAttempt('x')).toThrow('Not implemented: task 09');
-    expect(() => s.updateAttempt('x', {})).toThrow('Not implemented: task 09');
     expect(() => s.addSplitSet({ name: '', markers: [], officialDistance: null, interpolation: 'gap' })).toThrow(
       'Not implemented: task 21',
     );
+  });
+});
+
+describe('data actions', () => {
+  const files = (...names: string[]) => names.map((n) => new File([], n));
+
+  async function withBothAttempts() {
+    const store = createAppStore();
+    await store.getState().addFiles(files('trail-2025-head.gpx', 'notes.txt', 'trail-2024-head.gpx'));
+    return store;
+  }
+
+  it('addFiles parses, picks the earliest as baseline and focuses the other', async () => {
+    const store = createAppStore();
+    const statuses: string[] = [];
+    store.subscribe((s, prev) => s.status !== prev.status && statuses.push(s.status));
+    await store.getState().addFiles(files('trail-2025-head.gpx', 'notes.txt', 'trail-2024-head.gpx'));
+
+    const s = store.getState();
+    expect(statuses).toEqual(['parsing', 'analyzing', 'ready']);
+    expect(s.attempts.map((a) => a.label)).toEqual([gpx.attempts[1]!.label, gpx.attempts[0]!.label]);
+    expect(s.attempts[0]!.label).toMatch(/^\d{1,2} \w+ 2025$/);
+    expect(new Set(s.attempts.map((a) => a.color)).size).toBe(2);
+    const [a2025, a2024] = s.attempts;
+    expect(s.baseline).toEqual({ kind: 'course', attemptId: a2024!.id });
+    expect(s.focusAttemptId).toBe(a2025!.id);
+    expect(s.errors).toEqual([new UnsupportedFileError('notes.txt').message]);
+    expect(s.analysis!.attempts.map((a) => a.attemptId)).toEqual([a2025!.id, a2024!.id]);
+  });
+
+  it('applies only the latest analysis when an older one finishes last', async () => {
+    const store = await withBothAttempts();
+    const resolvers: ((r: AnalysisResult) => void)[] = [];
+    vi.mocked(analyzeInWorker)
+      .mockClear()
+      .mockImplementation(() => new Promise((resolve) => resolvers.push(resolve)));
+    store.getState().setSettings({ gridStep: 20 });
+    store.getState().setSettings({ gridStep: 50 });
+    const [first, second] = vi.mocked(analyzeInWorker).mock.calls.map(([input]) => analyze(input as AnalysisInput));
+    resolvers[1]!(second!);
+    await vi.waitFor(() => expect(store.getState().status).toBe('ready'));
+    resolvers[0]!(first!);
+    await new Promise((r) => setTimeout(r));
+    expect(store.getState().analysis!.grid.step).toBe(50);
+  });
+
+  it('removing the baseline promotes the earliest remaining attempt, then clears', async () => {
+    const store = await withBothAttempts();
+    const [a2025, a2024] = store.getState().attempts;
+    store.getState().removeAttempt(a2024!.id);
+    await vi.waitFor(() => expect(store.getState().status).toBe('ready'));
+    expect(store.getState()).toMatchObject({
+      baseline: { kind: 'course', attemptId: a2025!.id },
+      focusAttemptId: null,
+    });
+    expect(store.getState().analysis!.attempts.map((a) => a.attemptId)).toEqual([a2025!.id]);
+
+    store.getState().removeAttempt(a2025!.id);
+    expect(store.getState()).toMatchObject({ attempts: [], baseline: null, analysis: null, status: 'idle' });
+  });
+
+  it('setBaseline re-analyses and moves the focus off the new baseline', async () => {
+    const store = await withBothAttempts();
+    const [a2025, a2024] = store.getState().attempts;
+    store.getState().setBaseline({ kind: 'course', attemptId: a2025!.id });
+    await vi.waitFor(() => expect(store.getState().analysis!.baseline.attemptId).toBe(a2025!.id));
+    expect(store.getState().focusAttemptId).toBe(a2024!.id);
+  });
+
+  it('updateAttempt patches label and colour without re-analysing', async () => {
+    const store = await withBothAttempts();
+    const id = store.getState().attempts[0]!.id;
+    vi.mocked(analyzeInWorker).mockClear();
+    store.getState().updateAttempt(id, { label: 'Second go', color: '#123456' });
+    const s = store.getState();
+    expect(s.attempts[0]).toMatchObject({ label: 'Second go', color: '#123456' });
+    expect(s.analysis!.attempts[0]).toMatchObject({ label: 'Second go', color: '#123456' });
+    expect(analyzeInWorker).not.toHaveBeenCalled();
   });
 });
