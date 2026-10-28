@@ -1,12 +1,12 @@
 # 10 · App shell, upload and attempts list
 
-**Milestone** M1 · **Depends on** 02 · **Parallel with** 11, 12, 13 · **Branch** `task/10-shell-upload-attempts`
+**Milestone** M1 · **Depends on** 09 · **Parallel with** 11, 12, 13 · **Branch** `task/10-shell-upload-attempts`
 
 ## Goal
 Build the frame of the app: header with the units and theme toggles, responsive dashboard layout, file drop zone, and the attempts list where each attempt is labelled, coloured, set as baseline or removed.
 
 ## Read first
-`tasks/README.md`, `PLAN.md` §1.3, §1.4, §1.7 and §6, `src/store/useStore.ts`, and `src/test/factories.ts`.
+`tasks/README.md`, `PLAN.md` §1.3, §1.4, §1.7 and §6, `src/store/useStore.ts`, and `src/test/fixtures.ts`.
 
 ## You own
 - `src/components/Dashboard.tsx`
@@ -45,7 +45,7 @@ Build the frame of the app: header with the units and theme toggles, responsive 
 
 ## Acceptance
 - Component tests (Vitest + Testing Library):
-  - the empty state, and the attempts section for `synthetic-two-attempts`, `synthetic-gpx` and `synthetic-splits-only` (kind badges, the distance-baseline chip, overlap %)
+  - the empty state, and the attempts section for `loadFixture('fit-two-attempts')` and `loadFixture('gpx-two-attempts')` (kind badges, distance, elapsed time)
   - label edit, Escape cancels, baseline radio calls `setBaseline`, remove needs the inline confirm, and errors can be dismissed.
 - No horizontal scroll at 390 px. Check it by hand, and include a 390 px screenshot in the PR.
 

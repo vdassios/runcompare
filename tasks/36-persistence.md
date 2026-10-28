@@ -1,6 +1,6 @@
 # 36 · Session persistence
 
-**Milestone** M3 · **Depends on** 21 · **Parallel with** 30–35 · **Branch** `task/36-persistence`
+**Milestone** M3 · **Depends on** 21 · **Parallel with** 15, 22, 32, 34, 35 · **Branch** `task/36-persistence`
 
 ## Goal
 A reload keeps the session: attempts, the baseline and settings are restored from IndexedDB, so nobody has to drop their files again.

@@ -1,6 +1,6 @@
 # 31 · Insight rules A: effort and fade
 
-**Milestone** M3 · **Depends on** 09 · **Parallel with** 30, 32, 33 · **Branch** `task/31-insights-effort`
+**Milestone** M3 · **Depends on** 09 · **Parallel with** 10–14, 21, 30 · **Branch** `task/31-insights-effort`
 
 ## Goal
 Coaching rules about how each attempt was paced and how it faded: went out too hard, fade or bonk, cardiac drift, and cadence fade.
@@ -33,13 +33,13 @@ These new files and nothing else:
 - **Deterministic ids:** `${ruleId}:${attemptId}:${index}`.
 
 ## Acceptance (Vitest)
-Synthetic results from `makeAnalysisResult`, or from arrays built in the test:
+Small arrays built in the test, or `loadFixture(...)` results from `src/test/fixtures.ts`:
 - A fast start and slow finish fires went-out-too-hard. An even pace doesn't.
 - A 5 km slowdown with HR dropping is a strong bonk. A 5 km slowdown with HR steady is a warn fade. A 2 km slowdown doesn't fire.
 - Decoupling of 0.07 is warn, 0.12 is strong, and 0.03 doesn't fire.
-- Cadence fade doesn't fire on the `synthetic-gpx` scenario.
+- Cadence fade doesn't fire on `loadFixture('gpx-two-attempts')`.
 - Off-course points inside a candidate window are ignored.
-- **Fixtures:** run all four rules on `fit-two-attempts` through `analyze()` and **log** what fires, for the owner's review. Don't assert on the fixtures.
+- **Fixtures:** run all four rules on `loadFixture('fit-two-attempts')` and **log** what fires, for the owner's review. Don't assert on the fixtures.
 
 ## Out of scope
 Comparison rules (32) and UI (33).
