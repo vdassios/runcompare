@@ -131,7 +131,7 @@ Apply a 5-sample median filter to elevation, resample by distance, then take a m
 
 ### 5.6 Grid resampling
 - Grid points are `d_k = k·step`, and the last point is exactly `L`.
-- `time(d)` is the first time the attempt reaches `d`, linearly interpolated between the two samples that straddle it. Stops therefore show up as a jump in time at the next grid point.
+- `time(d)` is the first time the attempt reaches `d`, linearly interpolated between the two samples that straddle it. Stops therefore show up as a jump in time at the next grid point, and time spent standing after the finish, before the watch is stopped, is not part of `time(L)`.
 - HR, cadence and elevation: apply a 5 s rolling mean, then interpolate over `t` at `time(d)`.
 - `pace(d) = (time(d+50) − time(d−50)) / 100` s/m, clamped at the ends. This includes stops, which is truthful; the charts clip outliers.
 - `gap = pace / factor(grade)`. For a course baseline the grade is `grid.grade`. For a distance baseline it is the attempt's own grade, and `gap` is `null` without elevation.
@@ -207,9 +207,12 @@ Interaction state shared through the store: `hoverDistance`, `zoomRange`, `highl
 |---|---|---|
 | Elapsed | 25,734 s (7:08:54) | 26,279 s (7:17:59) |
 | Watch distance | ≈ 54,128 m | ≈ 53,936 m |
-| Records | ≈ 25,735 | recorded by task 03 |
+| Records | 25,735 | 26,280 |
+| Distance stops growing | ≈ 25,733 s | 26,116 s (then 163 s standing at the finish) |
 
-The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024 baseline is **+545 s (+9:05)**.
+The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024 baseline:
+- **Ghost delta at the finish** (`delta[end]`, splits total): **+383 s (+6:23)**, from first arrival at `L` (§5.6).
+- **KPI Time card** (elapsed time difference): **+545 s (+9:05)**. The gap between the two is the 163 s spent standing at the 2025 finish.
 
 ---
 
@@ -240,4 +243,5 @@ The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024
 - **Contract first (task 00):** parallel agents need fixed types. Otherwise each one invents its own.
 - **Real fixtures as test data, no synthetic factories:** tests use the owner's races run through the real pipeline. UI tasks therefore start after task 09.
 - **Insight rules as one file each, picked up by a glob:** rule tasks never edit a shared registry file.
+- **Finish delta uses first arrival, the Time card uses elapsed time:** standing at the finish before stopping the watch isn't racing, so the ghost delta and splits leave it out. The Time card still compares what the watch recorded.
 - **Raw samples are never committed:** `samples/` is gitignored. Only the sanitized `fixtures/` go in. The repo is public.

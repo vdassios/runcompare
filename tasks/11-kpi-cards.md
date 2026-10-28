@@ -12,7 +12,7 @@ Give an at-a-glance comparison of every attempt against the baseline on the head
 `src/components/SummaryCards.tsx` (+ a folder if needed), and its tests.
 
 ## Requirements
-- One card per metric: **Time** (finish time), **Moving time**, **Stopped**, **D+**, **Avg HR** and **Walking**.
+- One card per metric: **Time** (elapsed time, `metrics.elapsed`; its delta is the elapsed difference, not `delta[end]`), **Moving time**, **Stopped**, **D+**, **Avg HR** and **Walking**.
 - Each card lists every attempt: colour dot, label, value, and the delta against the baseline.
   - The baseline row shows "baseline" instead of a delta.
   - Time-like deltas use behind = orange and ahead = blue, and the sign comes from `formatDelta`.

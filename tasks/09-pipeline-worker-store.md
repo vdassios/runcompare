@@ -63,7 +63,7 @@ There are no synthetic factories: tests use the real fixtures. Export `loadFixtu
 It reads the files with `fs`, parses them with `parseFile`, runs `analyze()` in-process (no worker), and caches each result. Keep it short.
 
 ## Acceptance
-- Pipeline test on the fixtures: with a 2024 baseline, 2025's `delta[end]` = 545 ± 3 s. Neither attempt has a `low-overlap` warning. The metrics are non-null where the streams exist.
+- Pipeline test on the fixtures: with a 2024 baseline, 2025's `delta[end]` = 383 ± 3 s and its `metrics.elapsed` − 2024's = 545 s. Neither attempt has a `low-overlap` warning. The metrics are non-null where the streams exist.
 - Pipeline test: an attempt on a different synthetic course is rejected with `low-overlap`, and the rest of the result is still valid.
 - Pipeline test: a rule that throws is skipped and the other rules still run. Use a temporary rule file in a test-only glob, or inject rules through an optional parameter.
 - Store tests (worker mocked): adding files sets the baseline and focus, unsupported files go to `errors`, stale results are dropped, and removing the baseline picks a new one.
