@@ -2,19 +2,7 @@
  * Shared numeric helpers on typed arrays. Pure, DOM-free, and NaN-tolerant: a NaN sample is
  * skipped (or bridged by its finite neighbours), never spread across the whole output.
  */
-
-/**
- * First index `i` in `[lo, hi)` with `xs[i] >= x`, or `hi` when there is none. `xs` must be
- * non-decreasing over the range.
- */
-function lowerBound(xs: ArrayLike<number>, x: number, lo: number, hi: number): number {
-  while (lo < hi) {
-    const mid = (lo + hi) >>> 1;
-    if (xs[mid]! < x) lo = mid + 1;
-    else hi = mid;
-  }
-  return lo;
-}
+import { bisectLeft } from 'd3-array';
 
 /**
  * Linear interpolation of `ys` over `xs` at `x`. `xs` is non-decreasing and finite.
@@ -26,7 +14,7 @@ function lowerBound(xs: ArrayLike<number>, x: number, lo: number, hi: number): n
 export function interpolateAt(xs: ArrayLike<number>, ys: ArrayLike<number>, x: number): number {
   const n = Math.min(xs.length, ys.length);
   if (n === 0 || Number.isNaN(x)) return NaN;
-  const i = lowerBound(xs, x, 0, n);
+  const i = bisectLeft(xs, x, 0, n);
 
   // Nearest usable sample at or after i, and strictly before i (so xs[before] < x).
   let after = i;
