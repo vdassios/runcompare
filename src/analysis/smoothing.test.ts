@@ -1,36 +1,20 @@
+import { median } from 'd3-array';
+import { randomLcg, randomUniform } from 'd3-random';
 import { describe, expect, it } from 'vitest';
 import { MAX_GRADE, ascentDescent, gradeFromElevation, smoothElevationByDistance } from './smoothing';
 
-/** Deterministic PRNG (mulberry32), so the noisy profiles are the same on every run. */
-function rng(seed: number): () => number {
-  let a = seed >>> 0;
-  return () => {
-    a = (a + 0x6d2b79f5) >>> 0;
-    let t = a;
-    t = Math.imul(t ^ (t >>> 15), t | 1);
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
-  };
-}
-
 /** Samples every `spacing` metres over `length`, elevation `profile(d)` plus uniform ±`noise` m. */
 function track(length: number, spacing: number, noise: number, profile: (d: number) => number, seed = 1) {
-  const random = rng(seed);
+  const noisy = randomUniform.source(randomLcg(seed))(-noise, noise);
   const n = Math.floor(length / spacing) + 1;
   const dist = new Float64Array(n);
   const ele = new Float32Array(n);
   for (let k = 0; k < n; k++) {
     const d = k * spacing;
     dist[k] = d;
-    ele[k] = profile(d) + (random() * 2 - 1) * noise;
+    ele[k] = profile(d) + noisy();
   }
   return { dist, ele };
-}
-
-function median(values: ArrayLike<number>): number {
-  const sorted = Array.from(values).sort((a, b) => a - b);
-  const mid = sorted.length >> 1;
-  return sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
 }
 
 // 500 m flat at 200 m, a 1,000 m climb of exactly 100 m, then 500 m flat at 300 m.
@@ -106,8 +90,8 @@ describe('a noisy 1,000 m climb of 100 m', () => {
 
   it('has a median grade of 0.10 in the middle of the climb', () => {
     // Grid points 70–130 are 700–1,300 m, well inside the 500–1,500 m climb.
-    expect(median(grade.subarray(70, 131))).toBeCloseTo(0.1, 2);
-    expect(Math.abs(median(grade.subarray(0, 40)))).toBeLessThan(0.01);
+    expect(median(grade.subarray(70, 131))!).toBeCloseTo(0.1, 2);
+    expect(Math.abs(median(grade.subarray(0, 40))!)).toBeLessThan(0.01);
   });
 });
 

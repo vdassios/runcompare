@@ -1,6 +1,7 @@
 /**
  * Elevation smoothing, grade, and ascent/descent (PLAN §5.2). Pure functions on typed arrays.
  */
+import { max } from 'd3-array';
 import { bridgeNaN, resampleOnto, rollingMean, rollingMedian } from './interp';
 
 /** Steepest grade the analysis believes, as a fraction. Anything steeper is noise. */
@@ -24,20 +25,16 @@ export interface SmoothElevationOptions {
  * empty; with no finite elevation `ele` is all NaN.
  */
 export function smoothElevationByDistance(
-  dist: ArrayLike<number>,
+  dist: ArrayLike<number> & Iterable<number>,
   ele: ArrayLike<number>,
   opts: SmoothElevationOptions = {},
 ): { d: Float64Array; ele: Float32Array } {
   const { medianWindow = 5, step = 10, averageOver = 50 } = opts;
   if (!(step > 0)) throw new RangeError(`step must be positive, got ${step}`);
 
-  let length = -Infinity;
-  for (let k = 0; k < dist.length; k++) {
-    const x = dist[k]!;
-    if (x > length) length = x; // NaN never compares greater
-  }
-  if (length === -Infinity) return { d: new Float64Array(0), ele: new Float32Array(0) };
-  length = Math.max(0, length);
+  const furthest = max(dist); // skips NaN
+  if (furthest === undefined) return { d: new Float64Array(0), ele: new Float32Array(0) };
+  const length = Math.max(0, furthest);
 
   const d = distanceGrid(length, step);
   const median = rollingMedian(ele, medianWindow);
