@@ -1,0 +1,28 @@
+/* Mirrors tokens.ts as RGB channels for Tailwind's opacity modifiers. tokens.test.ts keeps them in sync. */
+:root {
+  --rc-background: 248 250 252;
+  --rc-surface: 255 255 255;
+  --rc-text: 15 23 42;
+  --rc-muted: 100 116 139;
+  --rc-border: 226 232 240;
+  --rc-accent: 15 118 110;
+  --rc-ahead: 37 99 235;
+  --rc-behind: 234 88 12;
+  --rc-off-course: 148 163 184;
+  --rc-estimated: 124 58 237;
+  color-scheme: light;
+}
+
+.dark {
+  --rc-background: 11 17 32;
+  --rc-surface: 17 26 46;
+  --rc-text: 226 232 240;
+  --rc-muted: 148 163 184;
+  --rc-border: 30 41 59;
+  --rc-accent: 45 212 191;
+  --rc-ahead: 96 165 250;
+  --rc-behind: 251 146 60;
+  --rc-off-course: 100 116 139;
+  --rc-estimated: 167 139 250;
+  color-scheme: dark;
+}
