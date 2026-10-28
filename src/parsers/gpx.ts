@@ -36,7 +36,7 @@ const ATTRIBUTE = /([\w.:-]+)\s*=\s*(?:"([^"]*)"|'([^']*)')/g;
 export function parseGpx(text: string, fileName: string): Activity {
   const points = keepIncreasingTimes(scanTrackPoints(text));
   if (points.length === 0) {
-    throw new UnsupportedFileError("GPX has no timed track points (routes aren't supported)");
+    throw new UnsupportedFileError(fileName, "GPX has no timed track points (routes aren't supported)");
   }
 
   const n = points.length;
