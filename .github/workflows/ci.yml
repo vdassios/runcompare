@@ -1,0 +1,67 @@
+# Job names `checks` and `visual` are required status checks on main; don't rename them.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run build
+      - name: Production build excludes the test harness
+        run: |
+          if grep -rl -e 'synthetic-two-attempts' -e '__RC_STORE__' dist; then
+            echo "::error::The production build contains the test harness (files listed above)."
+            exit 1
+          fi
+
+  visual:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    # Same image and version as scripts/playwright-docker.sh (@playwright/test in package.json).
+    container:
+      image: mcr.microsoft.com/playwright:v1.64.1-noble
+      options: --ipc=host
+    env:
+      RC_IN_CONTAINER: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - run: npm ci
+      - name: Check the image matches @playwright/test
+        run: |
+          pinned="$(node -p "require('./package.json').devDependencies['@playwright/test']")"
+          installed="$(npx playwright --version | awk '{print $2}')"
+          if [ "$pinned" != "1.64.1" ] || [ "$installed" != "1.64.1" ]; then
+            echo "::error::@playwright/test is $pinned (installed $installed) but the CI image is v1.64.1; update both together."
+            exit 1
+          fi
+      - run: npm run test:visual
+      - run: npm run test:e2e
+      - if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-${{ github.run_attempt }}
+          path: |
+            playwright-report/
+            test-results/
+          retention-days: 14
