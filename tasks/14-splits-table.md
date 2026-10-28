@@ -1,6 +1,6 @@
 # 14 · Splits table
 
-**Milestone** M1 · **Depends on** 02, 08 · **Branch** `task/14-splits-table`
+**Milestone** M1 · **Depends on** 09 · **Branch** `task/14-splits-table`
 
 ## Goal
 A table of split times per km or mile, per lap and per climb, with heat-coloured deltas against the baseline that always add up to the total.
@@ -27,8 +27,8 @@ A table of split times per km or mile, per lap and per climb, with heat-coloured
 - The first column is sticky. On mobile the table scrolls sideways inside its container only.
 
 ## Acceptance
-- Component: render the splits section for `synthetic-two-attempts` (distance and laps modes, metric and imperial), `synthetic-off-course` and `synthetic-splits-only`.
-- Unit: the totals row equals `delta[end]` for every scenario, the climbs mode is hidden with `segments: []`, and the laps mode is hidden with fewer than 2 laps.
+- Component: render the splits section for `loadFixture('fit-two-attempts')` (distance and laps modes, metric and imperial), and with `offCourse` set on a stretch of a copy.
+- Unit: the totals row equals `delta[end]` for both fixtures, the climbs mode is hidden with `segments: []`, and the laps mode is hidden with fewer than 2 laps.
 
 ## Out of scope
 The climbs table (34) and computing splits (08 owns `computeSplits`).

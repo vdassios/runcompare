@@ -1,6 +1,6 @@
 # 12 · Linked charts
 
-**Milestone** M1 · **Depends on** 02 · **Parallel with** 10, 11, 13 · **Branch** `task/12-linked-charts`
+**Milestone** M1 · **Depends on** 09 · **Parallel with** 10, 11, 13 · **Branch** `task/12-linked-charts`
 
 ## Goal
 A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence and the time delta) with one zoom and one crosshair, synced with the map through the store. This is the heart of the app.
@@ -38,10 +38,9 @@ A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence an
 
 ## Acceptance
 - Unit: the option builders give the right charts and series for:
-  - `synthetic-two-attempts`
-  - `synthetic-gpx` (no cadence chart)
-  - `synthetic-splits-only` (pace and delta only, dashed)
-  - `synthetic-off-course` (grey band)
+  - `loadFixture('fit-two-attempts')`
+  - `loadFixture('gpx-two-attempts')` (no cadence chart)
+  - the FIT result with `offCourse` set on a stretch of a copy (grey band)
   - one zoomed state, `zoomRange = {from: 3000, to: 6000}`
 - Unit: the axis-pointer handler turns an ECharts event into `setHover(d)`, and an external `hoverDistance` produces the matching `showTip` action.
 - Unit: the option builders are pure functions of `(analysis, units, theme, xAxis)`. Test the percentile clipping, the hidden-chart rules and the time-axis labels.

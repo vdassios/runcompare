@@ -11,6 +11,7 @@ Teach `analyze()` and the store about split-set attempts and distance baselines,
 ## You own
 - `src/analysis/pipeline.ts` and its test (extend them)
 - the `addSplitSet` and `updateSplitSet` actions, plus the baseline rules, in `src/store/useStore.ts`
+- `src/test/fixtures.ts` (add fixtures)
 
 ## Requirements
 - **Distance baseline:**
@@ -27,7 +28,7 @@ Teach `analyze()` and the store about split-set attempts and distance baselines,
   - `addSplitSet(set, label?)` adds a `SplitsAttempt` (label defaults to `set.name`, colour from the palette) and re-analyses. If there is no baseline yet, it becomes `{ kind: 'distance', attemptId, preset: 'custom', distance: last marker's distance }`. It returns the id.
   - `updateSplitSet` replaces the set and re-analyses.
   - Removing a distance baseline's split set falls back to the earliest GPS attempt as a course baseline, or to `null`.
-- **Fixture inputs** for the pipeline tests (tasks 32 and 37 reuse them):
+- **Add to `loadFixture`** in `src/test/fixtures.ts` (tasks 22, 32 and 37 use them):
   - `fit-vs-pro`: both FIT fixtures on a 2024 course baseline, plus a pro set `10 → 55:00, 25 → 2:30:00, 54 → 5:30:00` with `officialDistance` 54,000 and `'gap'`.
   - `splits-only-10k`: a 10K distance baseline from a target time of 40:00, plus a pro set at 5 km 14:10 and 10 km 28:30.
 

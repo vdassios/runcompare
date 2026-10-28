@@ -22,7 +22,7 @@ Publish the app at `runcompare.pages.dev`, with a preview deploy for every PR an
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy` that disables the camera, microphone and geolocation
   - long cache headers for `/assets/*`
-- **Verify the build output:** the production `dist/` must not contain the test factories (search for `synthetic-two-attempts`), the fixtures, or source maps that reveal local paths.
+- **Verify the build output:** the production `dist/` must not contain the fixtures, or source maps that reveal local paths.
 - **README:** add the live URL badge and the "Files never leave your browser" statement, with a short explanation of how that's achieved: parsing in a worker, and no network calls apart from map tiles.
 
 ## Acceptance
