@@ -1,6 +1,6 @@
 # 35 · Lap-snapping on distance baselines
 
-**Milestone** M3 · **Depends on** 21 · **Parallel with** 30–34, 36 · **Branch** `task/35-lap-snapping`
+**Milestone** M3 · **Depends on** 21 · **Parallel with** 15, 22, 32, 34, 36 · **Branch** `task/35-lap-snapping`
 
 ## Goal
 On a distance baseline, GPS distance drifts. When an attempt has **manual laps** at known distances (per-km lap presses on the road, or 400 m laps on the track), use them as exact markers instead of scaling the whole run linearly.

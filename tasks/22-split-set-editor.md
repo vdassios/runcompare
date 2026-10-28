@@ -1,6 +1,6 @@
 # 22 · Split-set editor and baseline picker
 
-**Milestone** M2 · **Depends on** 02, 20 · **Parallel with** 21 · **Branch** `task/22-split-set-editor`
+**Milestone** M2 · **Depends on** 20, 21 · **Branch** `task/22-split-set-editor`
 
 ## Goal
 Let users enter a pro's split times (rows, paste or a target time), keep a small library of saved sets, and choose a **distance baseline** (5K, 10K, half, marathon or custom).
@@ -38,7 +38,7 @@ Let users enter a pro's split times (rows, paste or a target time), keep a small
 
 ## Acceptance
 - Component tests:
-  - the section renders for `synthetic-two-attempts` (course baseline) and `synthetic-splits-only` (distance baseline), in each tab, including one paste-error state
+  - the section renders for `loadFixture('fit-two-attempts')` (course baseline) and `loadFixture('splits-only-10k')` (distance baseline), in each tab, including one paste-error state
   - pasting `10 30:00, 15 1:02:00` gives two rows
   - imperial paste `6 36:00` stores 9,656.064 m
   - the target time 10K in 40:00 shows `4:00 /km`

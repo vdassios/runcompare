@@ -50,29 +50,29 @@ Read these, then your task file, then `PLAN.md` (the sections your task cites), 
 |---|---|---|---|
 | 00 | [Scaffold and shared contract](00-scaffold-contract.md) | M1 | — |
 | 01 | [Fixture sanitizer](01-fixture-sanitizer.md) | M1 | 00 |
-| 02 | [Test factories and CI](02-factories-ci.md) | M1 | 00 |
+| 02 | [CI](02-ci.md) | M1 | 00 |
 | 03 | [FIT parser](03-fit-parser.md) | M1 | 01 |
 | 04 | [GPX parser](04-gpx-parser.md) | M1 | 01 |
 | 05 | [Smoothing, grade, GAP](05-smoothing-gap.md) | M1 | 00 |
 | 06 | [Course alignment](06-alignment.md) | M1 | 01 |
 | 07 | [Grid resampling and delta](07-grid-resampling.md) | M1 | 05 |
 | 08 | [Metrics and splits](08-metrics-splits.md) | M1 | 05 |
-| 09 | [Pipeline, worker, store](09-pipeline-worker-store.md) | M1 | 02, 03, 04, 06, 07, 08 |
-| 10 | [App shell, upload, attempts list](10-shell-upload-attempts.md) | M1 | 02 |
-| 11 | [KPI cards](11-kpi-cards.md) | M1 | 02 |
-| 12 | [Linked charts](12-linked-charts.md) | M1 | 02 |
-| 13 | [Route map](13-route-map.md) | M1 | 02 |
-| 14 | [Splits table](14-splits-table.md) | M1 | 02, 08 |
+| 09 | [Pipeline, worker, store](09-pipeline-worker-store.md) | M1 | 03, 04, 06, 07, 08 |
+| 10 | [App shell, upload, attempts list](10-shell-upload-attempts.md) | M1 | 09 |
+| 11 | [KPI cards](11-kpi-cards.md) | M1 | 09 |
+| 12 | [Linked charts](12-linked-charts.md) | M1 | 09 |
+| 13 | [Route map](13-route-map.md) | M1 | 09 |
+| 14 | [Splits table](14-splits-table.md) | M1 | 09 |
 | 15 | [M1 end-to-end](15-m1-e2e.md) | M1 | 09–14 |
 | 20 | [Split-set model](20-split-set-model.md) | M2 | 05 |
 | 21 | [Pipeline: split sets and distance baselines](21-pipeline-split-sets.md) | M2 | 09, 20 |
-| 22 | [Split-set editor and baseline picker](22-split-set-editor.md) | M2 | 02, 20 |
+| 22 | [Split-set editor and baseline picker](22-split-set-editor.md) | M2 | 20, 21 |
 | 23 | [M2 end-to-end](23-m2-e2e.md) | M2 | 15, 21, 22 |
 | 30 | [Climb and descent detection](30-climbs.md) | M3 | 09 |
 | 31 | [Insight rules A: effort and fade](31-insights-effort.md) | M3 | 09 |
 | 32 | [Insight rules B: comparison](32-insights-comparison.md) | M3 | 09, 30 |
-| 33 | [Insights panel](33-insights-panel.md) | M3 | 02 |
-| 34 | [Climbs table](34-climbs-table.md) | M3 | 02, 30 |
+| 33 | [Insights panel](33-insights-panel.md) | M3 | 31, 32 |
+| 34 | [Climbs table](34-climbs-table.md) | M3 | 30 |
 | 35 | [Lap-snapping](35-lap-snapping.md) | M3 | 21 |
 | 36 | [Session persistence](36-persistence.md) | M3 | 21 |
 | 37 | [M3 end-to-end](37-m3-e2e.md) | M3 | 23, 30–36 |
@@ -83,14 +83,14 @@ graph LR
   00 --> 01 & 02 & 05
   01 --> 03 & 04 & 06
   05 --> 07 & 08 & 20
-  02 --> 09 & 10 & 11 & 12 & 13 & 14 & 22 & 33 & 34
   03 & 04 & 06 & 07 & 08 --> 09
-  08 --> 14
-  09 & 10 & 11 & 12 & 13 & 14 --> 15
-  09 --> 21 & 30 & 31
-  20 --> 21 & 22
+  09 --> 10 & 11 & 12 & 13 & 14 & 21 & 30 & 31
+  10 & 11 & 12 & 13 & 14 --> 15
+  20 --> 21
+  21 --> 22
   15 & 21 & 22 --> 23
   30 --> 32 & 34
+  31 & 32 --> 33
   21 --> 35 & 36
   23 & 30 & 31 & 32 & 33 & 34 & 35 & 36 --> 37
   37 --> 38
@@ -99,8 +99,9 @@ graph LR
 **Suggested waves.** Inside a wave, tasks can run in parallel. Finish a milestone before starting the next unless you have spare agents.
 - **Wave 1:** 00
 - **Wave 2:** 01, 02, 05
-- **Wave 3:** 03, 04, 06, 07, 08, 10, 11, 12, 13, 20
-- **Wave 4:** 09, 14, 22, 33
-- **Wave 5:** 15, 21, 30, 31
-- **Wave 6:** 23, 32, 34, 35, 36
-- **Wave 7:** 37, then 38
+- **Wave 3:** 03, 04, 06, 07, 08, 20
+- **Wave 4:** 09
+- **Wave 5:** 10, 11, 12, 13, 14, 21, 30, 31
+- **Wave 6:** 15, 22, 32, 34, 35, 36
+- **Wave 7:** 23, 33
+- **Wave 8:** 37, then 38

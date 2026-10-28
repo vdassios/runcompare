@@ -1,6 +1,6 @@
 # 13 · Route map
 
-**Milestone** M1 · **Depends on** 02 · **Parallel with** 10, 11, 12 · **Branch** `task/13-route-map`
+**Milestone** M1 · **Depends on** 09 · **Parallel with** 10, 11, 12 · **Branch** `task/13-route-map`
 
 ## Goal
 Show the course on a map, coloured by where the focused attempt gained or lost time against the baseline, with a hover marker synced with the charts.
@@ -31,7 +31,7 @@ Show the course on a map, coloured by where the focused attempt gained or lost t
 
 ## Acceptance
 - Unit: the piece colouring is a pure function of `(grid, delta, offCourse, pieceLength)`. Test the sign, clipping and off-course handling, and the nearest-grid-point lookup.
-- Component: the section is absent for `synthetic-splits-only`.
+- Component: the section renders for `loadFixture('fit-two-attempts')` and is absent when `analysis` is null.
 
 ## Out of scope
 The charts (12) and elevation colouring of the line.

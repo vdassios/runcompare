@@ -1,6 +1,6 @@
 # 11 · KPI cards
 
-**Milestone** M1 · **Depends on** 02 · **Parallel with** 10, 12, 13 · **Branch** `task/11-kpi-cards`
+**Milestone** M1 · **Depends on** 09 · **Parallel with** 10, 12, 13 · **Branch** `task/11-kpi-cards`
 
 ## Goal
 Give an at-a-glance comparison of every attempt against the baseline on the headline metrics.
@@ -24,7 +24,7 @@ Give an at-a-glance comparison of every attempt against the baseline on the head
 - Layout: a 3-column grid on desktop, 2 columns at 768 px and below, 1 column under 480 px.
 
 ## Acceptance
-- Component: render the summary section for `synthetic-two-attempts`, `synthetic-gpx` (estimated badge, no cadence) and `synthetic-splits-only` (Time card only).
+- Component: render the summary section for `loadFixture('fit-two-attempts')` (2025 shows `+9:05` ± 0:03) and `loadFixture('gpx-two-attempts')` (estimated badge).
 - Unit: delta sign and colour mapping, hiding cards and rows on null values, and the imperial D+ in feet.
 
 ## Out of scope

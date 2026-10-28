@@ -1,6 +1,6 @@
 # 33 · Insights panel
 
-**Milestone** M3 · **Depends on** 02 · **Parallel with** 30, 31, 32, 34 · **Branch** `task/33-insights-panel`
+**Milestone** M3 · **Depends on** 31, 32 · **Parallel with** 23 · **Branch** `task/33-insights-panel`
 
 ## Goal
 Show the coaching insights clearly. Clicking one zooms the charts and highlights the stretch of course it's about.
@@ -25,7 +25,7 @@ Show the coaching insights clearly. Clicking one zooms the charts and highlights
 
 ## Acceptance
 - Component tests:
-  - the section for `synthetic-two-attempts` (one per severity), the filtered state, the selected state, and the empty state
+  - the section for `loadFixture('fit-two-attempts')`, the filtered state, the selected state, and the empty state
   - the template is filled in both unit systems
   - clicking sets `highlightRanges` and a padded `zoomRange`
   - a second click clears both

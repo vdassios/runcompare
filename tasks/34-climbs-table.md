@@ -1,6 +1,6 @@
 # 34 · Climbs table
 
-**Milestone** M3 · **Depends on** 02, 30 · **Parallel with** 31, 32, 33 · **Branch** `task/34-climbs-table`
+**Milestone** M3 · **Depends on** 30 · **Parallel with** 15, 22, 32, 35, 36 · **Branch** `task/34-climbs-table`
 
 ## Goal
 A per-climb and per-descent comparison: how each attempt did on each named stretch of the course, with VAM and descent rate.
@@ -26,7 +26,7 @@ A per-climb and per-descent comparison: how each attempt did on each named stret
 - The table is sortable by a column (delta of the focused attempt by default, largest loss first). The first column is sticky, and on mobile it scrolls sideways inside its container.
 
 ## Acceptance
-- Component tests: the section for `synthetic-two-attempts` (both, climbs-only, and sorted by VAM) and `synthetic-splits-only` (where the section is absent), the VAM is formatted in ft/h when imperial, the sort works, and estimated split-set rows are marked.
+- Component tests: the section for `loadFixture('fit-two-attempts')` (both, climbs-only, and sorted by VAM) and with `segments: []` (where the section is absent), the VAM is formatted in ft/h when imperial, the sort works, and estimated split-set rows are marked.
 
 ## Out of scope
 Detection (30) and the splits table's climbs mode (already in 14).
