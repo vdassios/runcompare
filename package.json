@@ -12,7 +12,8 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,css,html,json}\" \"!.claude/**\"",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
-    "sanitize": "tsx scripts/sanitize-samples.ts"
+    "sanitize": "tsx scripts/sanitize-samples.ts",
+    "lint:commits": "commitlint --from origin/main --to HEAD"
   },
   "dependencies": {
     "@fontsource/inter": "5.3.0",
@@ -23,6 +24,8 @@
     "zustand": "5.0.16"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@eslint/js": "10.0.1",
     "@types/d3-array": "3.2.2",
     "@types/d3-random": "3.0.4",

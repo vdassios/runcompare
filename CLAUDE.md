@@ -10,7 +10,7 @@ Read [`PLAN.md`](PLAN.md) for the product and algorithms, then [`tasks/README.md
 
 ## Git
 
-**Commits** follow [Conventional Commits](https://www.conventionalcommits.org/) as linted by [commitlint](https://github.com/conventional-changelog/commitlint)'s `config-conventional`:
+**Commits** follow [Conventional Commits](https://www.conventionalcommits.org/), enforced by `commitlint.config.js`. Check them with `npm run lint:commits` before pushing; CI's `commits` job runs the same check on every PR.
 
 ```text
 feat(05): add smoothing, grade and GAP
