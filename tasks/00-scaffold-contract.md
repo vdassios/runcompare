@@ -30,7 +30,7 @@ Create the project skeleton and the **shared contract** that every other task co
 npm scripts:
 - `dev`, `build` (`tsc -b && vite build`), `preview`
 - `lint`, `typecheck` (`tsc -b --noEmit`), `test` (`vitest run`)
-- `test:visual` and `test:e2e`: placeholders that print "set up in task 02" and exit 0
+- `test:e2e`: a placeholder that prints "set up in task 02" and exit 0
 
 Runtime dependencies, exact versions: `react@18`, `react-dom@18`, `zustand`, `@fontsource/inter`. Don't add chart, map or FIT libraries here; the tasks that use them add them.
 
@@ -291,7 +291,7 @@ parseDuration(text): number | null             // "1:02:00", "30:00", "45" (seco
 defaultUnits(language: string): UnitSystem     // en-US, en-LR, my → imperial; otherwise metric
 ```
 - Use a true minus sign (U+2212) for negatives.
-- Numbers are grouped with `en-GB` style regardless of the browser locale, so snapshots stay stable.
+- Numbers are grouped with `en-GB` style regardless of the browser locale, so output stays stable.
 
 ### 4. `src/theme/`
 - Colour tokens as CSS variables on `:root` and `.dark`: background, surface, text, muted, border, accent, `ahead` (blue), `behind` (orange), `off-course` (grey) and `estimated`.
@@ -350,7 +350,7 @@ export interface AppState {
 
 `Header`, `UploadPanel`, `AttemptList`, `SplitSetEditor`, `SummaryCards`, `RouteMap`, `LinkedCharts`, `SplitsTable`, `ClimbsTable`, `InsightsPanel`.
 
-- Give each section a `data-section="<kebab-name>"` wrapper so visual tests can screenshot it.
+- Give each section a `data-section="<kebab-name>"` wrapper so tests can find it.
 - Layout: a centred `max-w-7xl` column with `px-4` gutters and vertical spacing. Task 10 owns the final layout.
 
 ### 7. Docs

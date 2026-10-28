@@ -12,7 +12,6 @@
     "format": "prettier --write \"**/*.{ts,tsx,js,css,html,json}\" \"!.claude/**\"",
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
-    "test:visual": "echo 'set up in task 02'",
     "test:e2e": "echo 'set up in task 02'",
     "sanitize": "tsx scripts/sanitize-samples.ts"
   },

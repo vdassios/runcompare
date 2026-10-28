@@ -5,7 +5,7 @@
 > **Run this task on the owner's machine.** The raw files only exist in the gitignored `samples/` folder there.
 
 ## Goal
-Copy the owner's race files into `fixtures/` for tests and visual scenarios, with the owner's name removed, and add a test that fails if it ever gets back in. The repo is public. Nothing from `samples/` may be committed.
+Copy the owner's race files into `fixtures/` for tests and harness scenarios, with the owner's name removed, and add a test that fails if it ever gets back in. The repo is public. Nothing from `samples/` may be committed.
 
 ## Read first
 `tasks/README.md`, `PLAN.md` §7 (fixture facts) and §9.

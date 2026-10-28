@@ -9,7 +9,7 @@ A table of split times per km or mile, per lap and per climb, with heat-coloured
 `tasks/README.md`, `PLAN.md` §3 and §5.9, `src/analysis/splits.ts`, and `src/store/useStore.ts`.
 
 ## You own
-`src/components/SplitsTable/**` and `tests/visual/splits.spec.ts`.
+`src/components/SplitsTable/**` and its tests.
 
 ## Requirements
 - **Modes**, as a segmented control:
@@ -27,7 +27,7 @@ A table of split times per km or mile, per lap and per climb, with heat-coloured
 - The first column is sticky. On mobile the table scrolls sideways inside its container only.
 
 ## Acceptance
-- Visual: `splits.spec.ts` covers the splits section for `synthetic-two-attempts` (distance and laps modes, metric and imperial), `synthetic-off-course` and `synthetic-splits-only`.
+- Component: render the splits section for `synthetic-two-attempts` (distance and laps modes, metric and imperial), `synthetic-off-course` and `synthetic-splits-only`.
 - Unit: the totals row equals `delta[end]` for every scenario, the climbs mode is hidden with `segments: []`, and the laps mode is hidden with fewer than 2 laps.
 
 ## Out of scope

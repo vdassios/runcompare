@@ -43,7 +43,7 @@ Desktop first. Below 768 px everything stacks into one column: charts stacked, a
 ---
 
 ## 2. Stack
-Vite, React 18, TypeScript (strict), Tailwind CSS, Zustand, `echarts` + `echarts-for-react`, `leaflet` + `react-leaflet@4` with OSM tiles, `@garmin/fitsdk`, a dependency-free GPX scanner (workers have no `DOMParser`), a Web Worker for parsing and analysis, Vitest, Playwright (visual and e2e), ESLint + Prettier, `@fontsource/inter` (fonts are bundled, never fetched at runtime), and `idb-keyval` (task 36).
+Vite, React 18, TypeScript (strict), Tailwind CSS, Zustand, `echarts` + `echarts-for-react`, `leaflet` + `react-leaflet@4` with OSM tiles, `@garmin/fitsdk`, a dependency-free GPX scanner (workers have no `DOMParser`), a Web Worker for parsing and analysis, Vitest, Playwright (e2e), ESLint + Prettier, `@fontsource/inter` (fonts are bundled, never fetched at runtime), and `idb-keyval` (task 36).
 
 ---
 
@@ -99,7 +99,7 @@ src/
   test-harness/             ?fixture= scenarios (02, real-file scenarios 09/21)
 scripts/sanitize-samples.ts (01)
 fixtures/                   sanitized sample files, committed (01)
-tests/visual/ tests/e2e/    Playwright (02 and every UI task)
+tests/e2e/                  Playwright (02, 15, 23, 36, 37 and interaction tests in 10, 12, 13)
 ```
 
 ---
@@ -196,13 +196,12 @@ Interaction state shared through the store: `hoverDistance`, `zoomRange`, `highl
 
 ## 7. Testing
 - **Unit:** Vitest, on synthetic data and the sanitized fixtures.
-- **Visual:** Playwright, run **inside the official `mcr.microsoft.com/playwright` image** both locally (`npm run test:visual`) and in CI, so Mac and Linux produce the same pixels.
-  - Harness: `/?fixture=<scenario>`, compiled in only when `VITE_TEST_HARNESS=1`. Synthetic scenarios come from task 02; real-file scenarios from tasks 09 and 21.
-  - Projects: 1280×800 and 390×844, each in light and dark.
-  - Determinism: ECharts animations off, OSM tiles stubbed as flat grey, fonts bundled, `UTC` and `en-GB`, `maxDiffPixelRatio: 0.01`.
-- **E2E:** Playwright uploads real fixtures through the UI (tasks 15, 23, 37).
+- **Component:** Vitest + jsdom, rendering each section from the synthetic scenarios (task 02's factories).
+- **E2E:** Playwright on the host (Chromium, 1280×800 and 390×844, `UTC` and `en-GB`), `npm run test:e2e`.
+  - Real fixtures uploaded through the UI (tasks 15, 23, 36, 37).
+  - Interaction tests (hover sync, layout) on harness scenarios: `/?fixture=<scenario>`, compiled in only when `VITE_TEST_HARNESS=1`. Synthetic scenarios come from task 02; real-file scenarios from tasks 09 and 21. OSM tiles are stubbed.
 - **Privacy:** a fixture test checks that no fixture GPX carries `<metadata>` or `<author>`, where the owner's name is (task 01).
-- **CI:** GitHub Actions with two jobs, `checks` (lint, typecheck, unit) and `visual`. Both are required on `main`.
+- **CI:** GitHub Actions with two jobs, `checks` (lint, typecheck, unit, build) and `e2e`. Both are required on `main`.
 
 ### Fixture facts (from the raw FIT files)
 | | 2024 | 2025 |
@@ -226,7 +225,7 @@ The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024
 ## 9. Repo and workflow
 - Public repo at `github.com/vdassios/runcompare`, MIT licence.
 - Commits use the repo-local email `va.dassios@gmail.com`.
-- `main` is protected: PRs only, `checks` and `visual` must pass, no force pushes, and only the owner merges.
+- `main` is protected: PRs only, `checks` and `e2e` must pass, no force pushes, and only the owner merges.
 - One branch and one PR per task.
 - Bootstrap steps and the rules for builder agents are in [`tasks/README.md`](tasks/README.md).
 
@@ -240,6 +239,6 @@ The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024
 - **No HR zones:** the owner asked for none. They would need a max HR the app can't know.
 - **Distance presets: 5K, 10K, half and marathon, plus custom:** the owner's choice. Trail races rarely match a preset, so custom covers them.
 - **Contract first (task 00):** parallel agents need fixed types. Otherwise each one invents its own.
-- **Synthetic harness scenarios (task 02):** UI tasks can be built and snapshotted before the analysis pipeline exists. Real-file scenarios are added once it does.
+- **Synthetic harness scenarios (task 02):** UI tasks can be built and tested before the analysis pipeline exists. Real-file scenarios are added once it does.
 - **Insight rules as one file each, picked up by a glob:** rule tasks never edit a shared registry file.
 - **Raw samples are never committed:** `samples/` is gitignored. Only the sanitized `fixtures/` go in. The repo is public.

@@ -22,7 +22,7 @@ Add `idb-keyval` (exact version).
   - A version mismatch or corrupt data: discard it and add a one-time info message to `errors`: "Couldn't restore your last session".
   - Any IndexedDB failure (private mode, blocked): fall back silently to no persistence.
 - **Clear session** wipes the saved key and resets the data state. It uses the same inline confirm as removing an attempt (no browser dialog).
-- **Test harness:** disabled when `isTestHarness()`, so snapshots never pick up stale state.
+- **Test harness:** disabled when `isTestHarness()`, so harness scenarios never pick up stale state.
 - **Privacy:** add a line in the upload panel's empty state: "Your files are kept in this browser only. Clear them any time." This is the only edit allowed in `UploadPanel.tsx`.
 
 ## Acceptance
