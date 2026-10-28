@@ -43,7 +43,7 @@ export function resampleFlags(flags: Uint8Array, courseDist: Float64Array, grid:
 - A 60 s stop at 500 m makes `time` jump by about 60 s between 500 and 510 m, and the pace spike stays local to ±50 m.
 - On a synthetic 10 % climb with grid grade, `gap` ≈ `pace / 1.659`.
 - Fixture 2024 against itself (courseDist = dist): `delta` is all zeros.
-- Fixture 2025 against 2024, using a stub alignment (scaled distance) if task 06 hasn't merged yet: `delta[end]` = 26,279 − 25,734 = **545 s** (±2).
+- Fixture 2025 against 2024, using a stub alignment (scaled distance) if task 06 hasn't merged yet: `delta[end]` = 26,116 − 25,733 ≈ **383 s** (±3). That is first arrival at `L`; 2025's remaining 163 s were spent standing at the finish.
 - `resampleFlags` majority vote on a hand-made example.
 - Resampling 26k samples onto a 5,400-point grid takes under 100 ms (log).
 

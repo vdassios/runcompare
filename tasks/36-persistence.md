@@ -30,7 +30,7 @@ Add `idb-keyval` (exact version).
   - the debounce holds
   - a version mismatch is discarded with the message
   - an IndexedDB error falls back silently
-- Integration (in `persistence.test.ts`): add both FIT fixtures through the store, let the debounce pass, hydrate a fresh store, and the same attempts and `+9:05` are back. Clear the session, hydrate again, and the store is empty.
+- Integration (in `persistence.test.ts`): add both FIT fixtures through the store, let the debounce pass, hydrate a fresh store, and the same attempts and the Time card's `+9:05` are back. Clear the session, hydrate again, and the store is empty.
 
 ## Out of scope
 Sync across devices and exporting or importing sessions.
