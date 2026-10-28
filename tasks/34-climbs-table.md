@@ -9,7 +9,7 @@ A per-climb and per-descent comparison: how each attempt did on each named stret
 `tasks/README.md`, `PLAN.md` §5.10, and `src/analysis/segments.ts` (`segmentStats`).
 
 ## You own
-`src/components/ClimbsTable/**` and `tests/visual/climbs.spec.ts`.
+`src/components/ClimbsTable/**` and its tests.
 
 ## Requirements
 - Show **only** when `analysis.segments` is non-empty.
@@ -26,8 +26,7 @@ A per-climb and per-descent comparison: how each attempt did on each named stret
 - The table is sortable by a column (delta of the focused attempt by default, largest loss first). The first column is sticky, and on mobile it scrolls sideways inside its container.
 
 ## Acceptance
-- Visual: `climbs.spec.ts` covers the climbs section for `synthetic-two-attempts` (both, climbs-only, and sorted by VAM) and `synthetic-splits-only` (where the section is absent).
-- Component tests: the VAM is formatted in ft/h when imperial, the sort works, and estimated split-set rows are marked.
+- Component tests: the section for `synthetic-two-attempts` (both, climbs-only, and sorted by VAM) and `synthetic-splits-only` (where the section is absent), the VAM is formatted in ft/h when imperial, the sort works, and estimated split-set rows are marked.
 
 ## Out of scope
 Detection (30) and the splits table's climbs mode (already in 14).

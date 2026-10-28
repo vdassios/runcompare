@@ -9,7 +9,7 @@ Let users enter a pro's split times (rows, paste or a target time), keep a small
 `tasks/README.md`, `PLAN.md` §1.3, §1.4, §5.7 and §6, `src/analysis/splitSets.ts`, and `src/store/useStore.ts`.
 
 ## You own
-`src/components/SplitSetEditor/**`, `src/store/splitLibrary.ts` (+ test) and `tests/visual/split-editor.spec.ts`.
+`src/components/SplitSetEditor/**` and `src/store/splitLibrary.ts` (+ test).
 
 ## Requirements
 - **The section** (`data-section="split-set-editor"`) has two parts: "Add a split set" and "Baseline".
@@ -37,8 +37,8 @@ Let users enter a pro's split times (rows, paste or a target time), keep a small
 - **Units:** all distances are shown and entered in the active units and stored in metres. Switching units while editing converts the visible values without changing the stored metres.
 
 ## Acceptance
-- Visual: `split-editor.spec.ts` covers the section for `synthetic-two-attempts` (course baseline) and `synthetic-splits-only` (distance baseline), in each tab, with metric and imperial, including one paste-error state.
 - Component tests:
+  - the section renders for `synthetic-two-attempts` (course baseline) and `synthetic-splits-only` (distance baseline), in each tab, including one paste-error state
   - pasting `10 30:00, 15 1:02:00` gives two rows
   - imperial paste `6 36:00` stores 9,656.064 m
   - the target time 10K in 40:00 shows `4:00 /km`

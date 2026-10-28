@@ -9,7 +9,7 @@ A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence an
 `tasks/README.md`, `PLAN.md` §3, §5.6, §5.7 and §6, `src/model/types.ts`, and `src/store/useStore.ts`.
 
 ## You own
-`src/components/LinkedCharts/**` and `tests/visual/charts.spec.ts`. Add `echarts` and `echarts-for-react` (exact versions).
+`src/components/LinkedCharts/**` and `tests/e2e/charts.spec.ts`. Add `echarts` and `echarts-for-react` (exact versions).
 
 ## Requirements
 - **Charts, top to bottom.** A chart is hidden when no attempt has its data.
@@ -37,13 +37,13 @@ A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence an
 - **Size:** each chart is 180 px tall on desktop and 150 px on mobile, with matching left grid widths so the axes line up vertically.
 
 ## Acceptance
-- Visual: `charts.spec.ts` covers the charts section for:
+- Unit: the option builders give the right charts and series for:
   - `synthetic-two-attempts`
   - `synthetic-gpx` (no cadence chart)
   - `synthetic-splits-only` (pace and delta only, dashed)
   - `synthetic-off-course` (grey band)
-  - one zoomed state, set through `useStore.getState().setZoom({from: 3000, to: 6000})`
-- Playwright interaction test: hovering the delta chart updates `hoverDistance`. Read it through `window.__RC_STORE__`, the harness-only global from task 02. Setting `hoverDistance` shows a tooltip.
+  - one zoomed state, `zoomRange = {from: 3000, to: 6000}`
+- Playwright interaction test (`charts.spec.ts`): hovering the delta chart updates `hoverDistance`. Read it through `window.__RC_STORE__`, the harness-only global from task 02. Setting `hoverDistance` shows a tooltip.
 - Unit: the option builders are pure functions of `(analysis, units, theme, xAxis)`. Test the percentile clipping, the hidden-chart rules and the time-axis labels.
 
 ## Out of scope

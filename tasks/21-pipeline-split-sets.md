@@ -12,7 +12,7 @@ Teach `analyze()` and the store about split-set attempts and distance baselines,
 - `src/analysis/pipeline.ts` and its test (extend them)
 - the `addSplitSet` and `updateSplitSet` actions, plus the baseline rules, in `src/store/useStore.ts`
 - `src/test-harness/realScenarios.ts` (add scenarios)
-- `tests/visual/real-m2.spec.ts`
+- `tests/e2e/real-m2.spec.ts`
 
 ## Requirements
 - **Distance baseline:**
@@ -33,7 +33,7 @@ Teach `analyze()` and the store about split-set attempts and distance baselines,
   - `fit-vs-pro`: both FIT fixtures on a 2024 course baseline, plus a pro set `10 → 55:00, 25 → 2:30:00, 54 → 5:30:00` with `officialDistance` 54,000 and `'gap'`.
   - `splits-only-10k`: a 10K distance baseline from a target time of 40:00, plus a pro set at 5 km 14:10 and 10 km 28:30.
 
-  Snapshot both full pages in `real-m2.spec.ts`.
+  In `real-m2.spec.ts`, check that both reach `data-ready` with no `errors`.
 
 ## Acceptance
 - Pipeline tests:
@@ -42,7 +42,7 @@ Teach `analyze()` and the store about split-set attempts and distance baselines,
   - Splits only: no warnings and two attempts.
   - A course baseline pointing to a split attempt gives `invalid-baseline`.
 - Store tests: the first split set becomes the distance baseline, and removing it falls back correctly.
-- All M1 tests and snapshots still pass unchanged.
+- All M1 tests still pass unchanged.
 
 ## Out of scope
 The editor UI (22) and lap-snapping (35).

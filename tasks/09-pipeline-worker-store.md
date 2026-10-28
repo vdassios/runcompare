@@ -16,7 +16,7 @@ Join parsers, alignment, resampling and metrics into one `analyze()` that runs i
 - `src/worker/**`
 - the data actions in `src/store/useStore.ts`
 - `src/test-harness/realScenarios.ts`
-- `tests/visual/real-m1.spec.ts`
+- `tests/e2e/real-m1.spec.ts`
 
 ## Requirements
 
@@ -61,7 +61,7 @@ Register with task 02's `registerScenario`:
 - `fit-two-attempts`: both FIT fixtures, 2024 as the baseline.
 - `gpx-two-attempts`: both GPX heads.
 
-Loaders import the fixtures with `?url`, `fetch` them, and run the real worker pipeline. `tests/visual/real-m1.spec.ts` snapshots both as full pages.
+Loaders import the fixtures with `?url`, `fetch` them, and run the real worker pipeline. `tests/e2e/real-m1.spec.ts` checks that both reach `data-ready` with no `errors` and every M1 section rendered.
 
 ## Acceptance
 - Pipeline test on the fixtures: with a 2024 baseline, 2025's `delta[end]` = 545 ± 3 s. Neither attempt has a `low-overlap` warning. The metrics are non-null where the streams exist.
