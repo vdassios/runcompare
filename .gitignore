@@ -1,0 +1,12 @@
+# Raw, unsanitized activity files. Only sanitized copies in fixtures/ are committed (task 01).
+samples/
+
+node_modules/
+dist/
+coverage/
+playwright-report/
+test-results/
+blob-report/
+.env*
+*.local
+.DS_Store
