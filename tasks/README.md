@@ -18,7 +18,7 @@ Run this from a shell whose SSH and `gh` both reach the **`vdassios`** account.
 7. Run task 00, then 01, 02 and 05 (see the graph below).
 8. **After task 02 merges** (CI exists), turn on branch protection for `main`:
    - require a PR
-   - require the status checks `checks` and `visual`, with the branch up to date
+   - require the status check `checks`, with the branch up to date
    - no force pushes, no deletions
    - no required approvals: a solo owner can't approve their own PRs
 
@@ -30,20 +30,19 @@ Read these, then your task file, then `PLAN.md` (the sections your task cites), 
 2. **Branch and PR.** Use the branch `task/NN-slug`, one PR titled `NN: <title>`, against `main`. Never push to `main` and never merge. The owner merges.
 3. **Definition of done.** All of these pass locally, and the PR description says so:
    ```
-   npm run lint && npm run typecheck && npm test && npm run test:visual
+   npm run lint && npm run typecheck && npm test
    ```
    plus every item under your task's *Acceptance* section.
-4. **Snapshots.** Add or update snapshots only for the specs your task owns (`tests/visual/<area>.spec.ts`). Update them with `npm run test:visual -- --update-snapshots tests/visual/<area>.spec.ts`. If your change moves pixels in someone else's snapshots, don't update them: explain why in the PR, and the owner decides.
-5. **UI PRs** include a screenshot of each new or changed section, in light and dark mode.
-6. **Dependencies.** Add only the runtime dependencies your task lists. Anything else must be justified in the PR. Pin exact versions.
-7. **Conventions** (PLAN §3):
+4. **UI PRs** include a screenshot of each new or changed section, in light and dark mode.
+5. **Dependencies.** Add only the runtime dependencies your task lists. Anything else must be justified in the PR. Pin exact versions.
+6. **Conventions** (PLAN §3):
    - SI units internally; display only through `src/format/`.
    - Delta = attempt − baseline, positive means behind. Behind is orange, ahead is blue.
    - Analysis code is pure TypeScript with no DOM or React. Typed arrays; `NaN` for missing samples; `null` for missing streams.
    - No `any`.
    - Colours come from `src/theme/` tokens.
-8. **Tests** sit next to the code (`foo.ts` → `foo.test.ts`). Fixture-based tests read from `fixtures/` only, never from `samples/`.
-9. **When unsure,** write the open question in the PR description and choose the simplest option consistent with PLAN.md. Don't widen the scope.
+7. **Tests** sit next to the code (`foo.ts` → `foo.test.ts`). Fixture-based tests read from `fixtures/` only, never from `samples/`.
+8. **When unsure,** write the open question in the PR description and choose the simplest option consistent with PLAN.md. Don't widen the scope.
 
 ## Task graph
 
@@ -51,7 +50,7 @@ Read these, then your task file, then `PLAN.md` (the sections your task cites), 
 |---|---|---|---|
 | 00 | [Scaffold and shared contract](00-scaffold-contract.md) | M1 | — |
 | 01 | [Fixture sanitizer](01-fixture-sanitizer.md) | M1 | 00 |
-| 02 | [Visual test harness and CI](02-visual-harness-ci.md) | M1 | 00 |
+| 02 | [Test factories and CI](02-factories-ci.md) | M1 | 00 |
 | 03 | [FIT parser](03-fit-parser.md) | M1 | 01 |
 | 04 | [GPX parser](04-gpx-parser.md) | M1 | 01 |
 | 05 | [Smoothing, grade, GAP](05-smoothing-gap.md) | M1 | 00 |

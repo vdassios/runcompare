@@ -9,7 +9,7 @@ Show the coaching insights clearly. Clicking one zooms the charts and highlights
 `tasks/README.md`, `PLAN.md` §3, §5.11 and §6, `src/model/types.ts` (`Insight`), `src/format` (`fillTemplate`), and `src/store/useStore.ts`.
 
 ## You own
-`src/components/InsightsPanel/**` and `tests/visual/insights.spec.ts`.
+`src/components/InsightsPanel/**` and its tests.
 
 ## Requirements
 - Insights are grouped by attempt, in attempt order, and within each group sorted strong, warn, info. A group header carries the attempt's colour dot and label.
@@ -24,8 +24,8 @@ Show the coaching insights clearly. Clicking one zooms the charts and highlights
 - Insight text changes with the units toggle; it's rendered at display time.
 
 ## Acceptance
-- Visual: `insights.spec.ts` covers the insights section for `synthetic-two-attempts` (one per severity), the filtered state, the selected and highlighted state, and the empty state.
 - Component tests:
+  - the section for `synthetic-two-attempts` (one per severity), the filtered state, the selected state, and the empty state
   - the template is filled in both unit systems
   - clicking sets `highlightRanges` and a padded `zoomRange`
   - a second click clears both

@@ -10,7 +10,7 @@ import { SplitsTable } from './SplitsTable';
 import { SummaryCards } from './SummaryCards';
 import { UploadPanel } from './UploadPanel';
 
-/** Sections in PLAN §6 order. `data-section` is what visual tests screenshot. */
+/** Sections in PLAN §6 order. Tests find sections by `data-section`. */
 const SECTIONS: readonly { name: string; Component: ComponentType }[] = [
   { name: 'header', Component: Header },
   { name: 'upload-panel', Component: UploadPanel },

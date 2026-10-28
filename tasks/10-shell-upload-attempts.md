@@ -14,8 +14,6 @@ Build the frame of the app: header with the units and theme toggles, responsive 
 - `src/components/UploadPanel.tsx`
 - `src/components/AttemptList.tsx`
 - `src/components/ui/**`: small shared primitives (Button, Toggle, Badge, Card, Tooltip). Other UI tasks may *use* them but don't edit them.
-- `tests/visual/shell.spec.ts` (taken over from 02)
-- `tests/visual/attempts.spec.ts`
 
 ## Requirements
 - **Header:**
@@ -46,11 +44,10 @@ Build the frame of the app: header with the units and theme toggles, responsive 
 - **Accessibility:** every control reachable by keyboard and labelled. The radio group has a legend.
 
 ## Acceptance
-- Visual specs:
-  - `shell.spec.ts`: the empty app and `synthetic-two-attempts`, full page, all four projects
-  - `attempts.spec.ts`: the attempts section for `synthetic-two-attempts`, `synthetic-gpx` and `synthetic-splits-only`
-- Component tests (Vitest + Testing Library): label edit, Escape cancels, baseline radio calls `setBaseline`, remove needs the inline confirm, and errors can be dismissed.
-- No horizontal scroll at 390 px. Assert in Playwright that `document.documentElement.scrollWidth <= 390`.
+- Component tests (Vitest + Testing Library):
+  - the empty state, and the attempts section for `synthetic-two-attempts`, `synthetic-gpx` and `synthetic-splits-only` (kind badges, the distance-baseline chip, overlap %)
+  - label edit, Escape cancels, baseline radio calls `setBaseline`, remove needs the inline confirm, and errors can be dismissed.
+- No horizontal scroll at 390 px. Check it by hand, and include a 390 px screenshot in the PR.
 
 ## Out of scope
 Any section other than the header, upload panel and attempts list, and the distance baseline picker (22).

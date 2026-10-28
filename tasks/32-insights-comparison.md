@@ -29,7 +29,7 @@ Text and template rules are the same as in task 31. Every rule skips the baselin
 - Synthetic cases for each rule: it fires, it doesn't fire, and the edge case right at the threshold.
 - terrain-attribution shares add up to the total delta (±1 s).
 - top-sections windows never overlap and are left out when they're off-course.
-- vs-split-set runs on the `fit-vs-pro` real scenario. **Log** the output for the owner.
+- vs-split-set runs on the `fit-vs-pro` input from task 21. **Log** the output for the owner.
 
 ## Out of scope
 Effort rules (31) and UI (33).

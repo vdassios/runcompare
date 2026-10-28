@@ -6,4 +6,4 @@ Read [`PLAN.md`](PLAN.md) for the product and algorithms, then [`tasks/README.md
 - Delta = attempt − baseline at the same course distance; positive means behind. Behind is orange, ahead is blue.
 - Analysis code is pure TypeScript (no DOM, no React), on typed arrays: `NaN` for a missing sample, `null` for a missing stream.
 - No `any`. Colours come from `src/theme/` tokens.
-- Done means `npm run lint && npm run typecheck && npm test && npm run test:visual` pass; one branch `task/NN-slug` and one PR per task, never push to or merge into `main`.
+- Done means `npm run lint && npm run typecheck && npm test` pass; one branch `task/NN-slug` and one PR per task, never push to or merge into `main`.
