@@ -1,6 +1,6 @@
 # 30 · Climb and descent detection
 
-**Milestone** M3 · **Depends on** 09 · **Parallel with** 31, 33, 35, 36 · **Branch** `task/30-climbs`
+**Milestone** M3 · **Depends on** 09 · **Parallel with** 10–14, 21, 31 · **Branch** `task/30-climbs`
 
 ## Goal
 Find the climbs and descents of a course, and compute per-attempt stats on them (time, delta, VAM and descent rate). The splits table, charts, climbs table and insights already consume `analysis.segments`; this task fills it in.

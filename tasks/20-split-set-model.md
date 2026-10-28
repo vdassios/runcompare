@@ -1,6 +1,6 @@
 # 20 · Split-set model
 
-**Milestone** M2 · **Depends on** 05 · **Parallel with** M1 UI tasks · **Branch** `task/20-split-set-model`
+**Milestone** M2 · **Depends on** 05 · **Parallel with** 03, 04, 06, 07, 08 · **Branch** `task/20-split-set-model`
 
 ## Goal
 The pure logic behind split sets:

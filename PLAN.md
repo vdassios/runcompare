@@ -96,7 +96,7 @@ src/
   worker/                   analysis.worker.ts + client (09)
   store/                    useStore.ts (00 view state, 09/21 data actions), persistence (36), splitLibrary (22)
   components/               one file or folder per section (10–14, 22, 33, 34)
-  test/factories.ts         synthetic scenarios for tests (02)
+  test/fixtures.ts          the real fixtures run through the pipeline, for tests (09, 21)
   integration/              real-file tests through the whole UI (15, 23, 37)
 scripts/sanitize-samples.ts (01)
 fixtures/                   sanitized sample files, committed (01)
@@ -195,8 +195,8 @@ Interaction state shared through the store: `hoverDistance`, `zoomRange`, `highl
 ---
 
 ## 7. Testing
-- **Unit:** Vitest, on synthetic data and the sanitized fixtures.
-- **Component:** Vitest + jsdom, rendering each section from the synthetic scenarios (task 02's factories).
+- **Unit:** Vitest, on the sanitized fixtures, plus small arrays written inline where a test needs an exact expected value.
+- **Component:** Vitest + jsdom, rendering each section from the real fixtures run through the pipeline (`src/test/fixtures.ts`).
 - **Integration:** Vitest + jsdom, uploading the real fixtures through `<Dashboard />` with the pipeline run in-process (tasks 15, 23, 37).
 - **Manual:** hover sync, zoom, theming and the 390 px layout are checked by hand in each milestone's end-to-end task.
 - **Privacy:** a fixture test checks that no fixture GPX carries `<metadata>` or `<author>`, where the owner's name is (task 01).
@@ -238,6 +238,6 @@ The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024
 - **No HR zones:** the owner asked for none. They would need a max HR the app can't know.
 - **Distance presets: 5K, 10K, half and marathon, plus custom:** the owner's choice. Trail races rarely match a preset, so custom covers them.
 - **Contract first (task 00):** parallel agents need fixed types. Otherwise each one invents its own.
-- **Synthetic scenarios (task 02):** UI tasks can be built and tested before the analysis pipeline exists.
+- **Real fixtures as test data, no synthetic factories:** tests use the owner's races run through the real pipeline. UI tasks therefore start after task 09.
 - **Insight rules as one file each, picked up by a glob:** rule tasks never edit a shared registry file.
 - **Raw samples are never committed:** `samples/` is gitignored. Only the sanitized `fixtures/` go in. The repo is public.
