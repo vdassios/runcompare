@@ -201,7 +201,7 @@ Interaction state shared through the store: `hoverDistance`, `zoomRange`, `highl
   - Projects: 1280×800 and 390×844, each in light and dark.
   - Determinism: ECharts animations off, OSM tiles stubbed as flat grey, fonts bundled, `UTC` and `en-GB`, `maxDiffPixelRatio: 0.01`.
 - **E2E:** Playwright uploads real fixtures through the UI (tasks 15, 23, 37).
-- **Privacy:** a fixture test checks that the sanitized files contain only allowlisted data (task 01).
+- **Privacy:** a fixture test checks that no fixture GPX carries `<metadata>` or `<author>`, where the owner's name is (task 01).
 - **CI:** GitHub Actions with two jobs, `checks` (lint, typecheck, unit) and `visual`. Both are required on `main`.
 
 ### Fixture facts (from the raw FIT files)
