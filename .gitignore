@@ -7,3 +7,6 @@ coverage/
 .env*
 *.local
 .DS_Store
+
+# Agent worktrees
+.claude/worktrees/
