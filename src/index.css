@@ -1,0 +1,12 @@
+@import './theme/tokens.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    @apply bg-background font-sans text-text;
+    font-feature-settings: 'tnum' 1; /* tabular figures keep times and paces aligned */
+  }
+}
