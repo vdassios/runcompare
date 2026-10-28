@@ -46,7 +46,7 @@ export interface AppState {
   setHighlights(ranges: AppState['highlightRanges']): void;
   setFocusAttempt(id: AttemptId | null): void;
 
-  /** Test harness only: replaces the data state in one go and sets status to 'ready'. */
+  /** Tests only: replaces the data state in one go and sets status to 'ready'. */
   loadScenario(attempts: Attempt[], baseline: Baseline | null, analysis: AnalysisResult | null): void;
 }
 

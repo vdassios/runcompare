@@ -30,7 +30,6 @@ Create the project skeleton and the **shared contract** that every other task co
 npm scripts:
 - `dev`, `build` (`tsc -b && vite build`), `preview`
 - `lint`, `typecheck` (`tsc -b --noEmit`), `test` (`vitest run`)
-- `test:e2e`: a placeholder that prints "set up in task 02" and exit 0
 
 Runtime dependencies, exact versions: `react@18`, `react-dom@18`, `zustand`, `@fontsource/inter`. Don't add chart, map or FIT libraries here; the tasks that use them add them.
 
@@ -337,7 +336,7 @@ export interface AppState {
   setHighlights(ranges: AppState['highlightRanges']): void;
   setFocusAttempt(id: AttemptId | null): void;
 
-  /** Test harness only: replaces the data state in one go and sets status to 'ready'. */
+  /** Tests only: replaces the data state in one go and sets status to 'ready'. */
   loadScenario(attempts: Attempt[], baseline: Baseline | null, analysis: AnalysisResult | null): void;
 }
 ```
@@ -371,4 +370,4 @@ export interface AppState {
 - `npm run dev` shows an empty page with the header placeholder and no console errors.
 
 ## Out of scope
-Parsing, analysis, charts, maps, Playwright and CI.
+Parsing, analysis, charts, maps and CI.
