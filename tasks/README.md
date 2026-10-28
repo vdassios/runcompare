@@ -27,7 +27,7 @@ Run this from a shell whose SSH and `gh` both reach the **`vdassios`** account.
 Read these, then your task file, then `PLAN.md` (the sections your task cites), then `src/model/types.ts`.
 
 1. **Stay inside your files.** Create or modify only the files listed under *You own*. If you need a change anywhere else, especially `src/model/types.ts`, stop and say so in the PR description. Don't make the change.
-2. **Branch and PR.** Use the branch `task/NN-slug`, one PR titled `NN: <title>`, against `main`. Never push to `main` and never merge. The owner merges.
+2. **Branch and PR.** Use the branch `task/NN-slug`, one PR titled `NN: <title>`, against `main`. Never push to `main` and never merge. The owner merges. Commit messages and the PR's merge line follow the Git section of [`CLAUDE.md`](../CLAUDE.md).
 3. **Definition of done.** All of these pass locally, and the PR description says so:
    ```
    npm run lint && npm run typecheck && npm test
