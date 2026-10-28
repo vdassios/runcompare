@@ -14,7 +14,6 @@ Build the frame of the app: header with the units and theme toggles, responsive 
 - `src/components/UploadPanel.tsx`
 - `src/components/AttemptList.tsx`
 - `src/components/ui/**`: small shared primitives (Button, Toggle, Badge, Card, Tooltip). Other UI tasks may *use* them but don't edit them.
-- `tests/e2e/layout.spec.ts`
 
 ## Requirements
 - **Header:**
@@ -48,7 +47,7 @@ Build the frame of the app: header with the units and theme toggles, responsive 
 - Component tests (Vitest + Testing Library):
   - the empty state, and the attempts section for `synthetic-two-attempts`, `synthetic-gpx` and `synthetic-splits-only` (kind badges, the distance-baseline chip, overlap %)
   - label edit, Escape cancels, baseline radio calls `setBaseline`, remove needs the inline confirm, and errors can be dismissed.
-- No horizontal scroll at 390 px. Assert in `layout.spec.ts`, for the empty app and `synthetic-two-attempts`, that `document.documentElement.scrollWidth <= 390`.
+- No horizontal scroll at 390 px. Check it by hand, and include a 390 px screenshot in the PR.
 
 ## Out of scope
 Any section other than the header, upload panel and attempts list, and the distance baseline picker (22).

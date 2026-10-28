@@ -17,13 +17,12 @@ Publish the app at `runcompare.pages.dev`, with a preview deploy for every PR an
   2. Choose the `vdassios/runcompare` repo.
   3. Name the project `runcompare`. Set the production branch to `main`, the build command to `npm run build`, the output directory to `dist`, and the environment variable `NODE_VERSION=22`.
   4. Enable preview deployments for all non-production branches. Cloudflare comments preview URLs on PRs through its GitHub app.
-  5. **Don't** set `VITE_TEST_HARNESS` in Cloudflare.
 - **`public/_headers`:**
   - a strict CSP: `default-src 'self'`, `img-src 'self' data: https://tile.openstreetmap.org`, `worker-src 'self' blob:`, `style-src 'self' 'unsafe-inline'` (needed by ECharts and Leaflet), `connect-src 'self'`
   - `Referrer-Policy: strict-origin-when-cross-origin`
   - `Permissions-Policy` that disables the camera, microphone and geolocation
   - long cache headers for `/assets/*`
-- **Verify the build output:** the production `dist/` must not contain the test harness (task 02's check), the fixtures, or source maps that reveal local paths.
+- **Verify the build output:** the production `dist/` must not contain the test factories (search for `synthetic-two-attempts`), the fixtures, or source maps that reveal local paths.
 - **README:** add the live URL badge and the "Files never leave your browser" statement, with a short explanation of how that's achieved: parsing in a worker, and no network calls apart from map tiles.
 
 ## Acceptance

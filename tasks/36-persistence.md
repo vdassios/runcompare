@@ -22,7 +22,6 @@ Add `idb-keyval` (exact version).
   - A version mismatch or corrupt data: discard it and add a one-time info message to `errors`: "Couldn't restore your last session".
   - Any IndexedDB failure (private mode, blocked): fall back silently to no persistence.
 - **Clear session** wipes the saved key and resets the data state. It uses the same inline confirm as removing an attempt (no browser dialog).
-- **Test harness:** disabled when `isTestHarness()`, so harness scenarios never pick up stale state.
 - **Privacy:** add a line in the upload panel's empty state: "Your files are kept in this browser only. Clear them any time." This is the only edit allowed in `UploadPanel.tsx`.
 
 ## Acceptance
@@ -31,7 +30,7 @@ Add `idb-keyval` (exact version).
   - the debounce holds
   - a version mismatch is discarded with the message
   - an IndexedDB error falls back silently
-- E2E (`tests/e2e/persistence.spec.ts`, which you own): upload two FIT files, reload, and the same attempts and `+9:05` are back. Clear session, reload, and the app is empty.
+- Integration (in `persistence.test.ts`): add both FIT fixtures through the store, let the debounce pass, hydrate a fresh store, and the same attempts and `+9:05` are back. Clear the session, hydrate again, and the store is empty.
 
 ## Out of scope
 Sync across devices and exporting or importing sessions.

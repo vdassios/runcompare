@@ -9,7 +9,7 @@ A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence an
 `tasks/README.md`, `PLAN.md` §3, §5.6, §5.7 and §6, `src/model/types.ts`, and `src/store/useStore.ts`.
 
 ## You own
-`src/components/LinkedCharts/**` and `tests/e2e/charts.spec.ts`. Add `echarts` and `echarts-for-react` (exact versions).
+`src/components/LinkedCharts/**` and its tests. Add `echarts` and `echarts-for-react` (exact versions).
 
 ## Requirements
 - **Charts, top to bottom.** A chart is hidden when no attempt has its data.
@@ -32,7 +32,7 @@ A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence an
   - Moving the axis pointer calls `setHover(d)` (throttled to an animation frame). When `hoverDistance` is set from outside (the map), show the axis pointer and tooltip at that `d`.
   - One shared tooltip lists every attempt's value at that `d`, formatted, with the delta.
 - `highlightRanges` from the store are drawn as a `markArea` on every chart.
-- **Performance:** `showSymbol: false`, `sampling: 'lttb'`, and no animation when `isTestHarness()`. Only rebuild an option object when its inputs change.
+- **Performance:** `showSymbol: false`, and `sampling: 'lttb'`. Only rebuild an option object when its inputs change.
 - **Theme:** chart colours come from the theme tokens, and the charts re-theme when the resolved theme changes.
 - **Size:** each chart is 180 px tall on desktop and 150 px on mobile, with matching left grid widths so the axes line up vertically.
 
@@ -43,7 +43,7 @@ A stack of charts on one shared course axis (elevation, pace/GAP, HR, cadence an
   - `synthetic-splits-only` (pace and delta only, dashed)
   - `synthetic-off-course` (grey band)
   - one zoomed state, `zoomRange = {from: 3000, to: 6000}`
-- Playwright interaction test (`charts.spec.ts`): hovering the delta chart updates `hoverDistance`. Read it through `window.__RC_STORE__`, the harness-only global from task 02. Setting `hoverDistance` shows a tooltip.
+- Unit: the axis-pointer handler turns an ECharts event into `setHover(d)`, and an external `hoverDistance` produces the matching `showTip` action.
 - Unit: the option builders are pure functions of `(analysis, units, theme, xAxis)`. Test the percentile clipping, the hidden-chart rules and the time-axis labels.
 
 ## Out of scope

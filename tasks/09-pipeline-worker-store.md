@@ -3,7 +3,7 @@
 **Milestone** M1 · **Depends on** 02, 03, 04, 06, 07, 08 · **Branch** `task/09-pipeline-worker-store`
 
 ## Goal
-Join parsers, alignment, resampling and metrics into one `analyze()` that runs in a Web Worker, and implement the store's data actions so dropping files in the UI produces an `AnalysisResult`. Also register the first **real-file** harness scenarios.
+Join parsers, alignment, resampling and metrics into one `analyze()` that runs in a Web Worker, and implement the store's data actions so dropping files in the UI produces an `AnalysisResult`.
 
 ## Read first
 `tasks/README.md`, `PLAN.md` §4 and §5, `src/model/types.ts`, `src/store/useStore.ts`, and the exports of tasks 03–08.
@@ -15,8 +15,6 @@ Join parsers, alignment, resampling and metrics into one `analyze()` that runs i
 - `src/analysis/insights/rules/.gitkeep`
 - `src/worker/**`
 - the data actions in `src/store/useStore.ts`
-- `src/test-harness/realScenarios.ts`
-- `tests/e2e/real-m1.spec.ts`
 
 ## Requirements
 
@@ -55,13 +53,6 @@ M1 supports **course baselines with GPS attempts** only. If the baseline is a di
 - **`setBaseline`, `setSettings` and `removeAttempt`** re-analyse. Removing the baseline makes the earliest remaining GPS attempt the baseline, or `null` with `analysis = null`.
 - **`updateAttempt`** patches `attempts` and `analysis.attempts` in place without re-analysing.
 - **Ignore stale results:** keep a request counter, and only the latest analysis is applied.
-
-### Real scenarios (`realScenarios.ts`)
-Register with task 02's `registerScenario`:
-- `fit-two-attempts`: both FIT fixtures, 2024 as the baseline.
-- `gpx-two-attempts`: both GPX heads.
-
-Loaders import the fixtures with `?url`, `fetch` them, and run the real worker pipeline. `tests/e2e/real-m1.spec.ts` checks that both reach `data-ready` with no `errors` and every M1 section rendered.
 
 ## Acceptance
 - Pipeline test on the fixtures: with a 2024 baseline, 2025's `delta[end]` = 545 ± 3 s. Neither attempt has a `low-overlap` warning. The metrics are non-null where the streams exist.
