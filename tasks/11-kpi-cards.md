@@ -9,7 +9,7 @@ Give an at-a-glance comparison of every attempt against the baseline on the head
 `tasks/README.md`, `PLAN.md` §1.5, §1.6, §3 and §5.8, and `src/model/types.ts` (`AttemptMetrics`).
 
 ## You own
-`src/components/SummaryCards.tsx` (+ a folder if needed), its tests, and `tests/visual/kpi.spec.ts`.
+`src/components/SummaryCards.tsx` (+ a folder if needed), and its tests.
 
 ## Requirements
 - One card per metric: **Time** (finish time), **Moving time**, **Stopped**, **D+**, **Avg HR** and **Walking**.
@@ -24,7 +24,7 @@ Give an at-a-glance comparison of every attempt against the baseline on the head
 - Layout: a 3-column grid on desktop, 2 columns at 768 px and below, 1 column under 480 px.
 
 ## Acceptance
-- Visual: `kpi.spec.ts` covers the summary section for `synthetic-two-attempts`, `synthetic-gpx` (estimated badge, no cadence) and `synthetic-splits-only` (Time card only).
+- Component: render the summary section for `synthetic-two-attempts`, `synthetic-gpx` (estimated badge, no cadence) and `synthetic-splits-only` (Time card only).
 - Unit: delta sign and colour mapping, hiding cards and rows on null values, and the imperial D+ in feet.
 
 ## Out of scope

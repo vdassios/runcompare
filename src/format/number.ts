@@ -5,8 +5,8 @@ export const NO_VALUE = '—';
 const formatters = new Map<number, Intl.NumberFormat>();
 
 /**
- * Groups with en-GB conventions regardless of the browser locale, so output (and
- * visual snapshots) are stable. Negatives get a true minus sign.
+ * Groups with en-GB conventions regardless of the browser locale, so output is
+ * stable. Negatives get a true minus sign.
  */
 export function formatNumber(value: number, decimals = 0, opts: { trimZeros?: boolean } = {}): string {
   if (!Number.isFinite(value)) return NO_VALUE;

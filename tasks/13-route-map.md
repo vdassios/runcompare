@@ -9,7 +9,7 @@ Show the course on a map, coloured by where the focused attempt gained or lost t
 `tasks/README.md`, `PLAN.md` §3 and §6, `src/model/types.ts` (`CourseGrid`, `AttemptAnalysis.track`), and `src/store/useStore.ts`.
 
 ## You own
-`src/components/RouteMap/**` and `tests/visual/map.spec.ts`. Add `leaflet` and `react-leaflet@4` (exact versions) and `@types/leaflet`.
+`src/components/RouteMap/**` and its tests. Add `leaflet` and `react-leaflet@4` (exact versions) and `@types/leaflet`.
 
 ## Requirements
 - **Map:** OSM standard tiles (`https://tile.openstreetmap.org/{z}/{x}/{y}.png`) with the required attribution. Fit the bounds of the course on load and when the baseline changes. Import the Leaflet CSS in this component only.
@@ -30,9 +30,8 @@ Show the course on a map, coloured by where the focused attempt gained or lost t
 - **Size:** 420 px tall on desktop and 280 px on mobile. Scroll-wheel zoom is enabled only after a click into the map, so page scrolling isn't hijacked.
 
 ## Acceptance
-- Visual: `map.spec.ts` covers the map section with `stubTiles`, for `synthetic-two-attempts`, `synthetic-off-course`, and `synthetic-splits-only` (where the section is absent).
 - Unit: the piece colouring is a pure function of `(grid, delta, offCourse, pieceLength)`. Test the sign, clipping and off-course handling, and the nearest-grid-point lookup.
-- Playwright: hovering the map line updates `hoverDistance`, and setting `hoverDistance` shows the marker.
+- Component: the section is absent for `synthetic-splits-only`.
 
 ## Out of scope
 The charts (12) and elevation colouring of the line.
