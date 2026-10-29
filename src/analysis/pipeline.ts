@@ -2,8 +2,10 @@
  * `analyze()`: the whole analysis from attempts, baseline and settings to an `AnalysisResult`
  * (PLAN §4). Pure and synchronous; the worker runs it off the main thread.
  *
- * M1 handles a course baseline with GPS attempts. Distance baselines and split-set attempts are
- * reported with a warning and left out until task 21.
+ * A course baseline is a GPS attempt whose track and elevation define the grid; a distance
+ * baseline is a split set on a straight, flat line of `distance` metres. GPS attempts are placed
+ * on whichever it is, split sets are interpolated onto the grid, and every delta is measured
+ * against the baseline's own times.
  */
 import { formatDistance } from '../format';
 import type {
@@ -12,78 +14,120 @@ import type {
   AnalysisResult,
   AnalysisSettings,
   AnalysisWarning,
+  Attempt,
   AttemptAnalysis,
+  Baseline,
   CourseGrid,
   GpsAttempt,
+  SplitsAttempt,
 } from '../model/types';
-import { alignToCourse, buildReference, type Reference } from './alignment';
+import { alignToCourse, alignToDistance, buildReference, type AlignmentResult } from './alignment';
 import { gapPace } from './gap';
-import { buildCourseGrid, computeDelta, resampleAttempt, resampleFlags } from './grid';
+import { buildCourseGrid, buildDistanceGrid, computeDelta, resampleAttempt, resampleFlags } from './grid';
 import { runInsights } from './insights';
 import { rollingMean } from './interp';
 import { computeMetrics, gradePerSample, movementFlags } from './metrics';
 import { detectSegments } from './segments';
+import { interpolateSplitSet } from './splitSets';
 
 /** Off-course stretches shorter than this (m of course) are GPS noise, not worth a warning. */
 const OFF_COURSE_WARNING_LENGTH = 100;
 /** Samples averaged when speed has to be derived from distance and time. */
 const DERIVED_SPEED_WINDOW = 5;
 
+/** The grid and how a GPS attempt is placed on it, for one kind of baseline. */
+interface Course {
+  grid: CourseGrid;
+  place(activity: Activity): AlignmentResult;
+  /** Only a course baseline rejects attempts that follow too little of it. */
+  checkOverlap: boolean;
+}
+
 export function analyze(input: AnalysisInput): AnalysisResult {
   const { attempts, baseline, settings } = input;
   const warnings: AnalysisWarning[] = [];
 
-  const base = attempts.find((a) => a.id === baseline.attemptId);
-  if (baseline.kind !== 'course' || !base || base.kind !== 'gps' || !base.activity.lat || !base.activity.lon) {
-    const message =
-      baseline.kind === 'distance'
-        ? 'Distance baselines are not supported yet; choose a GPS attempt as the baseline.'
-        : 'The baseline must be a GPS attempt with a recorded track.';
-    warnings.push({ code: 'invalid-baseline', attemptId: baseline.attemptId, message });
+  const course = buildCourse(baseline, attempts, settings);
+  if (typeof course === 'string') {
+    warnings.push({ code: 'invalid-baseline', attemptId: baseline.attemptId, message: course });
     return { baseline, grid: emptyGrid(settings.gridStep), attempts: [], segments: [], insights: [], warnings };
   }
-
-  const grid = buildCourseGrid(base.activity, settings.gridStep);
-  const ref = buildReference(base.activity);
+  const { grid } = course;
 
   const analysed: AttemptAnalysis[] = [];
   for (const attempt of attempts) {
-    if (attempt.kind !== 'gps') {
-      warnings.push({
-        code: 'invalid-baseline',
-        attemptId: attempt.id,
-        message: `${attempt.label}: split sets are not supported yet, so it is left out.`,
-      });
-      continue;
-    }
-    const result = analyseGps(attempt, attempt.id === base.id, grid, ref, settings, warnings);
+    const result =
+      attempt.kind === 'gps'
+        ? analyseGps(attempt, attempt.id === baseline.attemptId, course, settings, warnings)
+        : analyseSplits(attempt, grid, warnings);
     if (result) analysed.push(result);
   }
 
-  const baselineTime = analysed.find((a) => a.attemptId === base.id)!.series.time;
+  // buildCourse checked the baseline exists, and the baseline itself is never rejected.
+  const baselineTime = analysed.find((a) => a.attemptId === baseline.attemptId)!.series.time;
   for (const a of analysed) {
-    if (a.attemptId !== base.id) a.delta = computeDelta(a.series, baselineTime);
+    if (a.attemptId !== baseline.attemptId) a.delta = computeDelta(a.series, baselineTime);
   }
 
   const withoutInsights = { baseline, grid, attempts: analysed, segments: detectSegments(grid), warnings };
   return { ...withoutInsights, insights: runInsights(withoutInsights, settings) };
 }
 
+/** The course for a valid baseline, or the message saying why it is invalid. */
+function buildCourse(baseline: Baseline, attempts: Attempt[], settings: AnalysisSettings): Course | string {
+  const base = attempts.find((a) => a.id === baseline.attemptId);
+  if (baseline.kind === 'course') {
+    if (!base || base.kind !== 'gps' || !base.activity.lat || !base.activity.lon) {
+      return 'The course baseline must be a GPS attempt with a recorded track.';
+    }
+    const ref = buildReference(base.activity);
+    const grid = buildCourseGrid(base.activity, settings.gridStep);
+    const place = (activity: Activity): AlignmentResult => {
+      const aligned = alignToCourse(activity, ref, settings);
+      return { ...aligned, courseDist: snapFinish(aligned.courseDist, activity.dist, grid.length, grid.step) };
+    };
+    return { grid, place, checkOverlap: true };
+  }
+  if (!base || base.kind !== 'splits') return 'The distance baseline must be a split set.';
+  if (!(Number.isFinite(baseline.distance) && baseline.distance > 0)) {
+    return 'The distance baseline needs a distance greater than zero.';
+  }
+  const grid = buildDistanceGrid(baseline.distance, settings.gridStep);
+  return { grid, place: (activity) => alignToDistance(activity, grid.length), checkOverlap: false };
+}
+
+/** A split set on the grid: no metrics, track or laps, and its warnings name the attempt. */
+function analyseSplits(attempt: SplitsAttempt, grid: CourseGrid, warnings: AnalysisWarning[]): AttemptAnalysis {
+  const placed = interpolateSplitSet(attempt.splitSet, grid);
+  for (const w of placed.warnings) warnings.push({ ...w, attemptId: attempt.id });
+  return {
+    attemptId: attempt.id,
+    label: attempt.label,
+    color: attempt.color,
+    kind: 'splits',
+    series: placed.series,
+    delta: null,
+    track: null,
+    laps: [],
+    metrics: null,
+    overlap: null,
+    markers: placed.markers,
+  };
+}
+
 /** One GPS attempt on the course, or null (with a warning) when too little of it overlaps. */
 function analyseGps(
   attempt: GpsAttempt,
   isBaseline: boolean,
-  grid: CourseGrid,
-  ref: Reference,
+  course: Course,
   settings: AnalysisSettings,
   warnings: AnalysisWarning[],
 ): AttemptAnalysis | null {
   const { activity } = attempt;
-  const aligned = alignToCourse(activity, ref, settings);
-  const { offCourse, overlap } = aligned;
-  const courseDist = snapFinish(aligned.courseDist, activity.dist, grid.length, grid.step);
+  const { grid } = course;
+  const { courseDist, offCourse, overlap } = course.place(activity);
   // The baseline defines the course, so it is never rejected against itself.
-  if (!isBaseline && overlap < settings.minOverlap) {
+  if (course.checkOverlap && !isBaseline && overlap < settings.minOverlap) {
     warnings.push({
       code: 'low-overlap',
       attemptId: attempt.id,
