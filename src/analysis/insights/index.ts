@@ -4,8 +4,10 @@
  */
 import type { AnalysisResult, AnalysisSettings, Insight, InsightRule } from '../../model/types';
 
-// Rule tests sit next to their rules; loading one as a rule would run its describe() blocks.
-const modules = import.meta.glob<{ default: InsightRule }>(['./rules/*.ts', '!./rules/*.test.ts'], { eager: true });
+// Rule tests sit next to their rules, and `_*.ts` files are shared helpers with no default export.
+const modules = import.meta.glob<{ default: InsightRule }>(['./rules/*.ts', '!./rules/*.test.ts', '!./rules/_*.ts'], {
+  eager: true,
+});
 
 export const RULES: InsightRule[] = Object.values(modules).map((m) => m.default);
 
