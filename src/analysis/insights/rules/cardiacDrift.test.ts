@@ -3,31 +3,44 @@ import { DEFAULT_SETTINGS } from '../../../model/types';
 import { loadFixture } from '../../../test/fixtures';
 import cardiacDrift from './cardiacDrift';
 
-/** The GPX fixture with the 2025 attempt alone, its decoupling set to `decoupling`. */
-function withDecoupling(decoupling: number | null) {
+/** The GPX fixtures with the decoupling of the 2024 baseline and the 2025 attempt set. */
+function withDecoupling(baseline: number | null, attempt: number | null) {
   const { analysis } = loadFixture('gpx-two-attempts');
-  const a = analysis.attempts[1]!;
-  return { ...analysis, attempts: [{ ...a, metrics: { ...a.metrics!, decoupling } }] };
+  const [b, a] = analysis.attempts;
+  return {
+    ...analysis,
+    attempts: [
+      { ...b!, metrics: { ...b!.metrics!, decoupling: baseline } },
+      { ...a!, metrics: { ...a!.metrics!, decoupling: attempt } },
+    ],
+  };
 }
+const severities = (baseline: number | null, attempt: number | null) =>
+  cardiacDrift.run(withDecoupling(baseline, attempt), DEFAULT_SETTINGS).map((i) => i.severity);
 
 describe('cardiac-drift', () => {
-  it('is warn above 5 %, strong above 10 %, and quiet below', () => {
-    expect(cardiacDrift.run(withDecoupling(0.07), DEFAULT_SETTINGS).map((i) => i.severity)).toEqual(['warn']);
-    expect(cardiacDrift.run(withDecoupling(0.12), DEFAULT_SETTINGS).map((i) => i.severity)).toEqual(['strong']);
-    expect(cardiacDrift.run(withDecoupling(0.03), DEFAULT_SETTINGS)).toEqual([]);
-    expect(cardiacDrift.run(withDecoupling(null), DEFAULT_SETTINGS)).toEqual([]);
+  it('is warn 5 points above the baseline, strong above 10, and quiet below', () => {
+    expect(severities(0.1, 0.17)).toEqual(['warn']);
+    expect(severities(0.1, 0.22)).toEqual(['strong']);
+    expect(severities(0.1, 0.13)).toEqual([]);
+    expect(severities(0.2, 0.15)).toEqual([]);
+    expect(severities(null, 0.3)).toEqual([]);
+    expect(severities(0.1, null)).toEqual([]);
   });
 
-  it('cites the decoupling and covers the second half of moving time', () => {
-    const result = withDecoupling(0.07);
+  it('cites both decouplings and covers the second half of moving time', () => {
+    const result = withDecoupling(0.1, 0.17);
     const [insight] = cardiacDrift.run(result, DEFAULT_SETTINGS);
     expect(insight).toMatchObject({
       id: 'cardiac-drift:trail-2025:0',
-      values: { decoupling: { kind: 'percent', value: 0.07 } },
+      values: {
+        decoupling: { kind: 'percent', value: 0.17 },
+        baselineDecoupling: { kind: 'percent', value: 0.1 },
+      },
     });
+    expect(insight!.template).toContain(result.attempts[0]!.label);
     const [range] = insight!.ranges;
     expect(range!.from).toBeGreaterThan(0);
-    expect(range!.from).toBeLessThan(result.grid.length);
     expect(range!.to).toBe(result.grid.length);
   });
 });

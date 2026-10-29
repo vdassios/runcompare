@@ -3,18 +3,21 @@ import { fillTemplate } from '../../../format';
 import { DEFAULT_SETTINGS, type AlignedSeries } from '../../../model/types';
 import { loadFixture } from '../../../test/fixtures';
 import {
+  comparison,
   courseRange,
-  gpsAttempts,
   maskUnusable,
   meanOver,
   rollingMedianOnGrid,
   runsWhere,
+  splitByDistance,
   splitByMovingTime,
+  stepTimes,
+  timesOver,
 } from './_helpers';
 import cadenceFade from './cadenceFade';
 import cardiacDrift from './cardiacDrift';
-import fade from './fade';
-import wentOutTooHard from './wentOutTooHard';
+import lostGround from './lostGround';
+import pacing from './pacing';
 
 /** 10 s per grid point, with a stop over points 3–4 and point 1 off-course. */
 const series: AlignedSeries = {
@@ -31,15 +34,36 @@ const series: AlignedSeries = {
 };
 
 describe('rule helpers', () => {
-  it('keeps GPS attempts only', () => {
+  it('compares the GPS attempts other than a course baseline with it', () => {
     const { analysis } = loadFixture('gpx-two-attempts');
     const [a, b] = analysis.attempts;
-    const withSplits = { ...analysis, attempts: [a!, { ...b!, kind: 'splits' as const }] };
-    expect(gpsAttempts(withSplits).map((x) => x.attemptId)).toEqual(['trail-2024']);
+    const c = comparison(analysis);
+    expect(c?.baseline.attemptId).toBe('trail-2024');
+    expect(c?.attempts.map((x) => x.attemptId)).toEqual(['trail-2025']);
+    expect(comparison({ ...analysis, attempts: [a!, { ...b!, kind: 'splits' as const }] })?.attempts).toEqual([]);
+    const onDistance = {
+      ...analysis,
+      baseline: { kind: 'distance' as const, attemptId: 'trail-2024', preset: 'custom' as const, distance: 1000 },
+    };
+    expect(comparison(onDistance)).toBeNull();
   });
 
   it('masks off-course and stopped points', () => {
     expect(Array.from(maskUnusable(series, [1, 2, 3, 4, 5, 6, 7, 8, 9]))).toEqual([1, NaN, 3, NaN, NaN, 6, 7, 8, 9]);
+  });
+
+  it('times each step while moving, with stops at 0 and off-course steps left out', () => {
+    expect(Array.from(stepTimes(series))).toEqual([NaN, NaN, 0, 0, 10, 10, 10, 10, NaN]);
+    const baseline = Float64Array.from([10, 10, 5, 5, 5, NaN, 5, 5, NaN]);
+    expect(timesOver(stepTimes(series), baseline, { start: 0, end: 9 })).toEqual({ attempt: 30, baseline: 25 });
+  });
+
+  it('cuts by course distance', () => {
+    expect(splitByDistance(10, 3)).toEqual([
+      { start: 0, end: 3 },
+      { start: 3, end: 6 },
+      { start: 6, end: 10 },
+    ]);
   });
 
   it('cuts by moving time, so a stop stretches the part it falls in', () => {
@@ -70,10 +94,10 @@ describe('rule helpers', () => {
   });
 });
 
-describe('effort and fade rules on the FIT fixtures', () => {
+describe('effort and fade rules on the FIT fixtures, 2025 against 2024', () => {
   it('logs what fires, for the owner to review', () => {
     const { analysis } = loadFixture('fit-two-attempts');
-    for (const rule of [wentOutTooHard, fade, cardiacDrift, cadenceFade]) {
+    for (const rule of [pacing, lostGround, cardiacDrift, cadenceFade]) {
       const insights = rule.run(analysis, DEFAULT_SETTINGS);
       console.log(`${rule.id}: ${insights.length} fired`);
       for (const i of insights) {

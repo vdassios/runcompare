@@ -1,33 +1,38 @@
 /**
- * cadence-fade (PLAN §5.11): running cadence in the last quarter of moving time more than 5 %
- * below the first quarter, at `warn`. Never fires when walking was estimated without cadence.
- *
- * Gotcha: PLAN writes the threshold as "cadence fade < −5 %" (last vs first), but
- * `metrics.cadenceFade` is (first − last) / first, positive when cadence dropped. So the rule
- * fires when it is above +5 %.
+ * cadence-fade (PLAN §5.11): the attempt's running cadence fell from the first to the last
+ * quarter of moving time more than 5 points further than the baseline's did, at `warn`.
+ * `metrics.cadenceFade` is (first − last) / first, positive when cadence dropped, and null when
+ * walking was estimated without cadence, so either side estimated means no insight.
  */
 import type { Insight, InsightRule } from '../../../model/types';
-import { courseRange, gpsAttempts, insightId, splitByMovingTime } from './_helpers';
+import { comparison, courseRange, insightId, splitByMovingTime } from './_helpers';
 
 const ID = 'cadence-fade';
-const DROP = 0.05;
+const MORE = 0.05;
 
 const cadenceFade: InsightRule = {
   id: ID,
   run(result) {
+    const c = comparison(result);
+    const b = c?.baseline.metrics;
+    if (!c || !b || b.walkingEstimated || b.cadenceFade == null) return [];
+
     const insights: Insight[] = [];
-    for (const a of gpsAttempts(result)) {
+    for (const a of c.attempts) {
       const m = a.metrics;
-      if (!m || m.walkingEstimated || m.cadenceFade == null || !(m.cadenceFade > DROP)) continue;
+      if (!m || m.walkingEstimated || m.cadenceFade == null || !(m.cadenceFade - b.cadenceFade > MORE)) continue;
       const lastQuarter = splitByMovingTime(a.series, 4)[3];
       insights.push({
         id: insightId(ID, a.attemptId, 0),
         ruleId: ID,
         attemptId: a.attemptId,
         severity: 'warn',
-        title: 'Cadence faded late in the race',
-        template: 'Running cadence in the last quarter was {drop} lower than in the first quarter.',
-        values: { drop: { kind: 'percent', value: m.cadenceFade } },
+        title: 'Cadence faded more late on',
+        template: `Running cadence fell {fade} from the first quarter to the last, against {baselineFade} on ${c.baseline.label}.`,
+        values: {
+          fade: { kind: 'percent', value: m.cadenceFade },
+          baselineFade: { kind: 'percent', value: b.cadenceFade },
+        },
         ranges: lastQuarter ? [courseRange(result.grid.d, lastQuarter)] : [],
       });
     }
