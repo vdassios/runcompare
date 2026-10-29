@@ -82,6 +82,60 @@ describe('detectSegments', () => {
     ]);
   });
 
+  it('starts a climb where the steep part starts, after a gentle run-in', () => {
+    const grid = profileGrid([
+      [0, 0],
+      [2000, 30], // 1.5 %
+      [3000, 130], // 10 %
+    ]);
+    const [climb, ...rest] = detectSegments(grid);
+    expect(rest).toEqual([]);
+    expect(Math.abs(climb!.from - 2000)).toBeLessThanOrEqual(20);
+    expect(climb!.to).toBe(3000);
+    expect(Math.abs(climb!.elevationChange - 100)).toBeLessThanOrEqual(5);
+  });
+
+  it('splits a climb at a 1 km flat in the middle but not at a 300 m one', () => {
+    const withFlat = (flat: number) =>
+      detectSegments(
+        profileGrid([
+          [0, 0],
+          [1000, 100],
+          [1000 + flat, 100],
+          [2000 + flat, 200],
+        ]),
+      ).map(({ kind, from, to }) => ({ kind, from, to }));
+    expect(withFlat(1000)).toEqual([
+      { kind: 'climb', from: 0, to: 1000 },
+      { kind: 'climb', from: 2000, to: 3000 },
+    ]);
+    expect(withFlat(300)).toEqual([{ kind: 'climb', from: 0, to: 2300 }]);
+  });
+
+  it('splits a descent at a flat the same way', () => {
+    const grid = profileGrid([
+      [0, 200],
+      [1000, 100],
+      [2000, 100],
+      [3000, 0],
+    ]);
+    expect(detectSegments(grid).map(({ kind, from, to }) => ({ kind, from, to }))).toEqual([
+      { kind: 'descent', from: 0, to: 1000 },
+      { kind: 'descent', from: 2000, to: 3000 },
+    ]);
+  });
+
+  it('takes its thresholds from the options', () => {
+    const grid = profileGrid([
+      [0, 0],
+      [1000, 100],
+      [2000, 100],
+      [3000, 200],
+    ]);
+    expect(detectSegments(grid, { flatLength: 1500 })).toHaveLength(1);
+    expect(detectSegments(grid, { minChange: 150 })).toEqual([]);
+  });
+
   it('drops runs that are too small or too gentle', () => {
     const small = profileGrid([
       [0, 0],

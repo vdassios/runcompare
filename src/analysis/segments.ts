@@ -5,12 +5,26 @@
 import { bisectLeft } from 'd3-array';
 import type { AlignedSeries, CourseGrid, CourseSegment } from '../model/types';
 
-/** A reversal at least this big (m) ends a climb or a descent; smaller dips stay inside it. */
-const REVERSAL = 10;
-/** A segment needs at least this much elevation change (m)… */
-const MIN_CHANGE = 50;
-/** …and at least this average grade (fraction). */
-const MIN_GRADE = 0.04;
+export interface SegmentOptions {
+  /** A reversal at least this big (m) ends a climb or a descent; smaller dips stay inside it. */
+  reversal: number;
+  /** A segment needs at least this much elevation change (m)… */
+  minChange: number;
+  /** …and at least this average grade (fraction). */
+  minGrade: number;
+  /** A stretch at least this long (m)… */
+  flatLength: number;
+  /** …whose average |grade| (fraction) is below this is flat, and ends a climb or a descent. */
+  flatGrade: number;
+}
+
+export const DEFAULT_SEGMENT_OPTIONS: Readonly<SegmentOptions> = {
+  reversal: 10,
+  minChange: 50,
+  minGrade: 0.04,
+  flatLength: 500,
+  flatGrade: 0.02,
+};
 
 export interface SegmentStats {
   time: number; // s between the ends
@@ -21,31 +35,36 @@ export interface SegmentStats {
 }
 
 /**
- * Splits the profile into alternating runs at every reversal of `REVERSAL` m or more, trims each
- * run to its actual low and high points, then keeps the runs big and steep enough. Runs are
- * consecutive, so the segments never overlap and come out ordered by `from`.
+ * Splits the profile into alternating runs at every reversal of `reversal` m or more, cuts each
+ * run at the flat stretches inside it, trims each piece to its own low and high points, then keeps
+ * the pieces big and steep enough. Pieces are disjoint and in course order, so the segments never
+ * overlap and come out ordered by `from`.
  */
-export function detectSegments(grid: CourseGrid): CourseSegment[] {
+export function detectSegments(grid: CourseGrid, options: Partial<SegmentOptions> = {}): CourseSegment[] {
   const { ele, d } = grid;
   if (!ele) return [];
+  const o = { ...DEFAULT_SEGMENT_OPTIONS, ...options };
 
   const segments: CourseSegment[] = [];
-  const turns = turningPoints(ele);
+  const turns = turningPoints(ele, o.reversal);
+  const flats = flatStretches(ele, d, o.flatLength, o.flatGrade);
   for (let k = 1; k < turns.length; k++) {
+    const a = turns[k - 1]!;
     const b = turns[k]!;
-    // A run leaves the last point of a flat at its start: a plateau belongs to neither side.
-    let a = turns[k - 1]!;
-    for (let i = a + 1; i < b; i++) if (ele[i] === ele[a]) a = i;
-    const elevationChange = ele[b]! - ele[a]!;
-    const avgGrade = elevationChange / (d[b]! - d[a]!);
-    if (Math.abs(elevationChange) < MIN_CHANGE || Math.abs(avgGrade) < MIN_GRADE) continue;
-    segments.push({
-      kind: elevationChange > 0 ? 'climb' : 'descent',
-      from: d[a]!,
-      to: d[b]!,
-      elevationChange,
-      avgGrade,
-    });
+    const direction = ele[b]! > ele[a]! ? 1 : -1;
+    for (const [s, e] of cutAtFlats(a, b, flats)) {
+      const [from, to] = trimToEnds(ele, s, e, direction);
+      const elevationChange = ele[to]! - ele[from]!;
+      const avgGrade = elevationChange / (d[to]! - d[from]!);
+      if (!(Math.abs(elevationChange) >= o.minChange && Math.abs(avgGrade) >= o.minGrade)) continue;
+      segments.push({
+        kind: elevationChange > 0 ? 'climb' : 'descent',
+        from: d[from]!,
+        to: d[to]!,
+        elevationChange,
+        avgGrade,
+      });
+    }
   }
   return segments;
 }
@@ -72,11 +91,10 @@ export function segmentStats(
 
 /**
  * Grid indices of the profile's turning points: the first and last extremes, plus every high or
- * low followed by a reversal of at least `REVERSAL` m. NaN samples are skipped. Ties keep the
- * first point, so a run ends where it first reaches its high or low.
- * Between two turning points the profile stays within their elevations.
+ * low followed by a reversal of at least `reversal` m. NaN samples are skipped. Between two
+ * turning points the profile stays within their elevations.
  */
-function turningPoints(ele: Float32Array): number[] {
+function turningPoints(ele: Float32Array, reversal: number): number[] {
   const turns: number[] = [];
   let trend: 1 | -1 | 0 = 0;
   let lo = -1; // while trend is 0: the lowest and highest points so far
@@ -89,12 +107,12 @@ function turningPoints(ele: Float32Array): number[] {
     if (trend === 0) {
       if (lo < 0 || e < ele[lo]!) lo = i;
       if (hi < 0 || e > ele[hi]!) hi = i;
-      if (e - ele[lo]! >= REVERSAL) [trend, extreme] = [1, i];
-      else if (ele[hi]! - e >= REVERSAL) [trend, extreme] = [-1, i];
+      if (e - ele[lo]! >= reversal) [trend, extreme] = [1, i];
+      else if (ele[hi]! - e >= reversal) [trend, extreme] = [-1, i];
       if (trend !== 0) turns.push(trend === 1 ? lo : hi);
     } else if ((e - ele[extreme]!) * trend > 0) {
       extreme = i;
-    } else if ((ele[extreme]! - e) * trend >= REVERSAL) {
+    } else if ((ele[extreme]! - e) * trend >= reversal) {
       turns.push(extreme);
       trend = trend === 1 ? -1 : 1;
       extreme = i;
@@ -102,6 +120,59 @@ function turningPoints(ele: Float32Array): number[] {
   }
   if (extreme >= 0) turns.push(extreme);
   return turns;
+}
+
+/**
+ * Grid index ranges `[from, to]` of the flat stretches, in course order: the union of every window
+ * of at least `length` m whose average |grade| is below `grade`. A window may reach a little into
+ * the slope beside it, so each stretch is then pulled in to where the profile is actually flat.
+ */
+function flatStretches(ele: Float32Array, d: Float64Array, length: number, grade: number): [number, number][] {
+  const n = ele.length;
+  // Total |elevation change| from the start to each point, so a window's is a difference.
+  const variation = new Float64Array(n);
+  for (let k = 1; k < n; k++) variation[k] = variation[k - 1]! + (Math.abs(ele[k]! - ele[k - 1]!) || 0);
+  const steep = (k: number) => Math.abs(ele[k + 1]! - ele[k]!) >= grade * (d[k + 1]! - d[k]!);
+
+  const flats: [number, number][] = [];
+  for (let i = 0, j = 0; i < n; i++) {
+    while (j < n && d[j]! - d[i]! < length) j++;
+    if (j === n) break;
+    if (variation[j]! - variation[i]! >= grade * (d[j]! - d[i]!)) continue;
+    const last = flats[flats.length - 1];
+    if (last && i <= last[1]) last[1] = j;
+    else flats.push([i, j]);
+  }
+  for (const flat of flats) {
+    while (flat[0] < flat[1] && steep(flat[0])) flat[0]++;
+    while (flat[1] > flat[0] && steep(flat[1] - 1)) flat[1]--;
+  }
+  return flats;
+}
+
+/** The parts of the run `[a, b]` outside the interiors of the flat stretches. */
+function cutAtFlats(a: number, b: number, flats: [number, number][]): [number, number][] {
+  const pieces: [number, number][] = [];
+  let start = a;
+  for (const [from, to] of flats) {
+    if (to <= start || from >= b) continue;
+    if (from > start) pieces.push([start, from]);
+    start = to;
+  }
+  if (start < b) pieces.push([start, b]);
+  return pieces;
+}
+
+/**
+ * The stretch of `[s, e]` from its last lowest point to the first highest point after it (for a
+ * descent, `direction` −1, the other way round), so a plateau at either end belongs to neither side.
+ */
+function trimToEnds(ele: Float32Array, s: number, e: number, direction: 1 | -1): [number, number] {
+  let from = s;
+  for (let i = s; i <= e; i++) if (direction * ele[i]! <= direction * ele[from]! || Number.isNaN(ele[from]!)) from = i;
+  let to = from;
+  for (let i = from; i <= e; i++) if (direction * ele[i]! > direction * ele[to]!) to = i;
+  return [from, to];
 }
 
 /** Index of the grid point at course distance `x`; segment ends always sit on grid points. */

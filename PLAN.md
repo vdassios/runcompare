@@ -159,7 +159,7 @@ Boundaries are every `splitLength(units)` (1,000 m or 1,609.344 m) plus `L`, or 
 - Splits that touch off-course points are shown greyed out as "not comparable".
 
 ### 5.10 Climbs and descents (course baseline only)
-On `grid.ele`, a climb is a stretch with cumulative gain ≥ 50 m and average grade ≥ 4 %, allowing dips < 10 m inside it. Descents are the mirror image. For each attempt and segment: time, delta, VAM (m/h) on climbs, and descent rate (m/h) on descents.
+On `grid.ele`, a climb is a stretch with cumulative gain ≥ 50 m and average grade ≥ 4 %, allowing dips < 10 m inside it. A flat stretch (≥ 500 m at < 2 % average grade) ends it, and each piece is trimmed to its own low and high points. Descents are the mirror image. For each attempt and segment: time, delta, VAM (m/h) on climbs, and descent rate (m/h) on descents.
 
 ### 5.11 Insight rules
 Each rule cites its numbers and returns the course ranges it is about.
