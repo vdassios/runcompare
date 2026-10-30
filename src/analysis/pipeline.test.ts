@@ -140,7 +140,7 @@ describe('analyze on a distance baseline', () => {
       settings: DEFAULT_SETTINGS,
     });
 
-    expect(result.warnings).toEqual([]);
+    expect(result.warnings).toEqual([expect.objectContaining({ code: 'distance-scaling', attemptId: 'cut' })]);
     expect(result.grid).toMatchObject({ length: 10_000, ele: null, grade: null, lat: null, lon: null });
     const [baseline, attempt] = result.attempts;
     expect(baseline!.delta).toBeNull();
