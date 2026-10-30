@@ -69,6 +69,7 @@ export function UploadPanel() {
               and shows where you gained or lost time, and why: climbs, pace, heart rate and stops.
             </p>
             <p className="font-medium text-text">Files never leave your browser.</p>
+            <p>Your files are kept in this browser only. Clear them any time.</p>
             <p>Supported formats: FIT (.fit) and GPX (.gpx).</p>
           </div>
         </DropTarget>
