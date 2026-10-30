@@ -40,7 +40,7 @@ afterEach(() => {
 describe('fit-two-attempts', () => {
   it('shows per-km splits with the baseline time and pace and the attempt delta', () => {
     render(fixture.analysis, 'metric');
-    expect(modeButtons()).toEqual(['Per km', 'Laps']);
+    expect(modeButtons()).toEqual(['Per km', 'Laps', 'Climbs']);
     expect(rows()).toHaveLength(55);
     const twelfth = rows()[11]!;
     expect(twelfth.querySelector('th')!.textContent).toBe('12 · 11.0–12.0 km');
@@ -52,7 +52,7 @@ describe('fit-two-attempts', () => {
 
   it('shows per-mile splits in imperial', () => {
     render(fixture.analysis, 'imperial');
-    expect(modeButtons()).toEqual(['Per mile', 'Laps']);
+    expect(modeButtons()).toEqual(['Per mile', 'Laps', 'Climbs']);
     expect(rows()).toHaveLength(34);
     expect(rows()[0]!.querySelector('th')!.textContent).toBe('1 · 0.0–1.0 mi');
     expect(rows()[0]!.querySelectorAll('td')[1]!.textContent).toMatch(/ \/mi$/);
@@ -105,12 +105,12 @@ describe('fit-two-attempts', () => {
   });
 
   it('hides the climbs mode without segments and offers it with them', () => {
-    render(fixture.analysis, 'metric');
+    render({ ...fixture.analysis, segments: [] }, 'metric');
     expect(el.querySelector('[data-mode="climbs"]')).toBeNull();
-    const climb = { kind: 'climb' as const, from: 1200, to: 3400, elevationChange: 310, avgGrade: 0.14 };
-    render({ ...fixture.analysis, segments: [climb] }, 'metric');
+    render(fixture.analysis, 'metric');
     clickMode('climbs');
-    expect(rows().map((r) => r.querySelector('th')!.textContent)).toEqual(['Climb 1 · 1.20–3.40 km']);
+    expect(rows()).toHaveLength(fixture.analysis.segments.length);
+    expect(rows()[0]!.querySelector('th')!.textContent).toBe('Climb 1 · 0.00–3.14 km');
     expect(el.querySelector('[data-row="total"] th')!.textContent).toBe('Course total');
   });
 });

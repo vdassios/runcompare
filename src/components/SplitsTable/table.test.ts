@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import type { AnalysisResult, CourseSegment } from '../../model/types';
+import type { AnalysisResult } from '../../model/types';
 import { TOKENS, type ResolvedTheme } from '../../theme';
 import { loadFixture } from '../../test/fixtures';
 import { MAX_HEAT_ALPHA, availableModes, baselineOf, buildSplitsTable, heat, type SplitsMode } from './table';
@@ -12,17 +12,18 @@ function deltaEnd(analysis: AnalysisResult): number {
   return delta[delta.length - 1]!;
 }
 
-const climb: CourseSegment = { kind: 'climb', from: 1200, to: 3400, elevationChange: 310, avgGrade: 0.14 };
-
 describe.each(['fit-two-attempts', 'gpx-two-attempts'] as const)('%s', (name) => {
   const { analysis } = loadFixture(name);
-  const modes: SplitsMode[] = name === 'fit-two-attempts' ? ['distance', 'laps'] : ['distance'];
+  // Both fixtures have detected climbs; only the FIT baseline has laps.
+  const modes: SplitsMode[] = name === 'fit-two-attempts' ? ['distance', 'laps', 'climbs'] : ['distance', 'climbs'];
+  // Climb rows skip the flats between climbs, so only these modes cover the whole course.
+  const wholeCourse = modes.filter((m) => m !== 'climbs');
 
   it('offers only the modes the data supports', () => {
     expect(availableModes(analysis)).toEqual(modes);
   });
 
-  it.each(modes.flatMap((mode) => (['metric', 'imperial'] as const).map((units) => [mode, units] as const)))(
+  it.each(wholeCourse.flatMap((mode) => (['metric', 'imperial'] as const).map((units) => [mode, units] as const)))(
     'has a totals row equal to delta[end], and %s rows (%s) that add up to it',
     (mode, units) => {
       const table = buildSplitsTable(analysis, mode, units);
@@ -66,16 +67,14 @@ describe('fit-two-attempts', () => {
       ...analysis,
       attempts: analysis.attempts.map((a) => (a === baselineOf(analysis) ? { ...a, laps: a.laps.slice(0, 1) } : a)),
     };
-    expect(availableModes(oneLap)).toEqual(['distance']);
+    expect(availableModes(oneLap)).not.toContain('laps');
   });
 
   it('hides climbs with no segments and shows one row per segment otherwise', () => {
-    expect(analysis.segments).toEqual([]);
-    expect(availableModes(analysis)).not.toContain('climbs');
-    const withClimb = { ...analysis, segments: [climb] };
-    expect(availableModes(withClimb)).toContain('climbs');
-    const rows = buildSplitsTable(withClimb, 'climbs', 'metric').rows;
-    expect(rows).toMatchObject([{ kind: 'climb', number: 1, from: 1200, to: 3400 }]);
+    expect(availableModes({ ...analysis, segments: [] })).not.toContain('climbs');
+    const rows = buildSplitsTable(analysis, 'climbs', 'metric').rows;
+    expect(rows.map((r) => [r.from, r.to])).toEqual(analysis.segments.map((s) => [s.from, s.to]));
+    expect(rows[0]).toMatchObject({ kind: 'climb', number: 1, from: 0, to: 3140 });
   });
 
   it('scales the heat to the largest |delta| per metre, ignoring off-course cells', () => {
