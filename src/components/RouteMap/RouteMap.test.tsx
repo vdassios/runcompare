@@ -36,6 +36,27 @@ it('renders the map and legend for two FIT attempts', () => {
   expect(el.querySelector('select')).toBeNull();
 });
 
+it('docks the elevation profile under the map and shares the hover distance through it', () => {
+  const { attempts, baseline, analysis } = loadFixture('fit-two-attempts');
+  useStore.getState().loadScenario(attempts, baseline, analysis);
+  useStore.getState().setUnits('metric');
+  act(() => root.render(<RouteMap />));
+
+  const profile = el.querySelector('[data-testid="elevation-profile"]')!;
+  expect(profile.querySelectorAll('rect[data-level]').length).toBeGreaterThan(0);
+  expect(profile.textContent).toContain('>10%');
+
+  const svg = profile.querySelector('svg')!;
+  svg.getBoundingClientRect = () => DOMRect.fromRect({ x: 100, width: 400, height: 96 });
+  act(() => svg.dispatchEvent(new MouseEvent('pointermove', { bubbles: true, clientX: 300 })));
+  expect(useStore.getState().hoverDistance).toBeCloseTo(analysis.grid.length / 2);
+  expect(profile.querySelector('line')).not.toBeNull();
+  expect(profile.textContent).toMatch(/km · [\d,]+ m · /);
+
+  act(() => svg.dispatchEvent(new MouseEvent('pointerout', { bubbles: true, relatedTarget: document.body })));
+  expect(useStore.getState().hoverDistance).toBeNull();
+});
+
 it('labels the legend in imperial units', () => {
   const { attempts, baseline, analysis } = loadFixture('fit-two-attempts');
   useStore.getState().loadScenario(attempts, baseline, analysis);

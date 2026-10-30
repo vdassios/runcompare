@@ -1,7 +1,8 @@
 /**
  * Route map section: the baseline course on OSM tiles, coloured by where the focused attempt
  * gained or lost time, with the hover marker and highlight ranges shared with the charts through
- * the store. On a distance baseline it draws the attempts' own tracks instead.
+ * the store, and the baseline's elevation profile docked underneath. On a distance baseline it
+ * draws the attempts' own tracks instead, with no profile.
  */
 import 'leaflet/dist/leaflet.css';
 import type { LeafletMouseEvent, Map as LeafletMap } from 'leaflet';
@@ -22,6 +23,7 @@ import {
   type LatLngTuple,
   type MapLine,
 } from './geometry';
+import { ElevationProfile } from './ElevationProfile';
 import { NEUTRAL_BAND, pieceColor, routePieces, type RouteColouring } from './pieces';
 
 const PIECE_LENGTH = 100; // m
@@ -97,30 +99,33 @@ export function RouteMap() {
         )}
       </div>
 
-      <MapContainer
-        className="h-[280px] w-full overflow-hidden rounded-lg border border-border md:h-[420px]"
-        style={{ background: colors.background }}
-        bounds={bounds}
-        boundsOptions={{ padding: [16, 16] }}
-        scrollWheelZoom={false}
-      >
-        <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
-        <Pane name="rc-tracks" style={{ zIndex: 410 }}>
-          {(!course || showAllTracks) && <Tracks tracks={tracks} weight={course ? 2 : 3} />}
-        </Pane>
-        {course && (
-          <Pane name="rc-course" style={{ zIndex: 420 }}>
-            <CourseLine course={course} colouring={colouring} colors={colors} />
+      <div className="overflow-hidden rounded-lg border border-border">
+        <MapContainer
+          className="h-[280px] w-full md:h-[420px]"
+          style={{ background: colors.background }}
+          bounds={bounds}
+          boundsOptions={{ padding: [16, 16] }}
+          scrollWheelZoom={false}
+        >
+          <TileLayer url={TILE_URL} attribution={TILE_ATTRIBUTION} />
+          <Pane name="rc-tracks" style={{ zIndex: 410 }}>
+            {(!course || showAllTracks) && <Tracks tracks={tracks} weight={course ? 2 : 3} />}
           </Pane>
-        )}
-        <Pane name="rc-highlight" style={{ zIndex: 430 }}>
-          <Highlights line={course ?? markerLine} color={colors.accent} />
-        </Pane>
-        <Pane name="rc-hover" style={{ zIndex: 440 }}>
-          <HoverMarker line={markerLine} colors={colors} />
-        </Pane>
-        <MapBehaviour hoverLines={hoverLines} bounds={bounds} fitKey={fitKey} />
-      </MapContainer>
+          {course && (
+            <Pane name="rc-course" style={{ zIndex: 420 }}>
+              <CourseLine course={course} colouring={colouring} colors={colors} />
+            </Pane>
+          )}
+          <Pane name="rc-highlight" style={{ zIndex: 430 }}>
+            <Highlights line={course ?? markerLine} color={colors.accent} />
+          </Pane>
+          <Pane name="rc-hover" style={{ zIndex: 440 }}>
+            <HoverMarker line={markerLine} colors={colors} />
+          </Pane>
+          <MapBehaviour hoverLines={hoverLines} bounds={bounds} fitKey={fitKey} />
+        </MapContainer>
+        {course && <ElevationProfile grid={analysis.grid} units={units} colors={colors} />}
+      </div>
 
       {colouring && focused && <Legend colouring={colouring} focused={focused} units={units} />}
     </div>
