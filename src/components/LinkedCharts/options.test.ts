@@ -116,7 +116,9 @@ describe('buildCharts on the FIT fixture', () => {
     const data = elevation!.data as [number, number][];
     expect(data[100]).toEqual([fit.grid.d[100], fit.grid.ele![100]]);
     expect(elevation!.areaStyle).toBeDefined();
-    expect(bands(chartOf(specs, 'elevation'), 'elevation')).toEqual([]); // no segments until M3, no off-course
+    // One band per climb or descent, none off course.
+    const shaded = bands(chartOf(specs, 'elevation'), 'elevation').map(([a, b]) => [a.xAxis, b.xAxis]);
+    expect(shaded).toEqual(fit.segments.map((s) => [s.from, s.to]));
   });
 
   it('tints the delta orange above zero and blue below, with a zero line', () => {
@@ -179,7 +181,7 @@ describe('off-course bands', () => {
   it('grey-bands the stretch where any attempt is off course', () => {
     expect(offCourseRanges(patched)).toEqual([{ from: 19995, to: 21005 }]);
     const elevation = chartOf(buildCharts(patched, 'metric', 'dark', 'distance'), 'elevation');
-    const [band] = bands(elevation, 'elevation');
+    const band = bands(elevation, 'elevation').find(([a]) => a.itemStyle.color === TOKENS.dark['off-course']);
     expect(band![0]).toMatchObject({ xAxis: 19995, itemStyle: { color: TOKENS.dark['off-course'] } });
     expect(band![1]).toEqual({ xAxis: 21005 });
   });
