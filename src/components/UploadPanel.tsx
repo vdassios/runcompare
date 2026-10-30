@@ -5,6 +5,7 @@
 import { useRef, useState, type DragEvent, type ReactNode } from 'react';
 import { useStore, type AppState } from '../store/useStore';
 import { Button } from './ui';
+import { preloadResultSections } from './resultSections';
 
 const STATUS_TEXT: Partial<Record<AppState['status'], string>> = {
   parsing: 'Parsing files…',
@@ -20,7 +21,9 @@ export function UploadPanel() {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const add = (files: FileList | null) => {
-    if (files && files.length > 0) void addFiles([...files]);
+    if (!files || files.length === 0) return;
+    preloadResultSections();
+    void addFiles([...files]);
   };
   const statusText = STATUS_TEXT[status];
 

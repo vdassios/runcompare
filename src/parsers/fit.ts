@@ -29,6 +29,8 @@ const LAP_TRIGGERS: Readonly<Record<string, LapTrigger>> = {
 export function parseFit(bytes: ArrayBuffer, fileName: string): Activity {
   const stream = Stream.fromArrayBuffer(bytes);
   if (!Decoder.isFIT(stream)) throw new UnsupportedFileError(fileName);
+  // The build prunes the SDK profile to the messages listed in scripts/fitProfile.ts: reading a new
+  // message type here means adding it there.
   // A truncated file still decodes up to the damage, so errors only matter when nothing came out.
   const { messages, errors } = new Decoder(stream).read();
 
