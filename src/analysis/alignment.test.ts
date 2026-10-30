@@ -3,7 +3,8 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { Decoder, Stream } from '@garmin/fitsdk';
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_SETTINGS, type Activity } from '../model/types';
+import { DEFAULT_SETTINGS, type Activity, type Lap, type LapTrigger } from '../model/types';
+import { loadFixture } from '../test/fixtures';
 import { alignToCourse, alignToDistance, buildReference, type AlignmentResult } from './alignment';
 import { EARTH_RADIUS } from './geo';
 
@@ -142,6 +143,67 @@ describe('alignToDistance', () => {
     expect(result.courseDist[3]).toBe(5000);
     expect(Array.from(result.offCourse)).toEqual([0, 0, 0, 0]);
     expect(result.overlap).toBe(1);
+  });
+
+  /** Ten samples per lap of each watch length; `trigger` for every lap. */
+  function lapped(lengths: number[], trigger: LapTrigger = 'manual'): Activity {
+    const dist = [0];
+    const laps: Lap[] = [];
+    for (const [k, l] of lengths.entries()) {
+      const at = dist[dist.length - 1]!;
+      for (let s = 1; s <= 10; s++) dist.push(at + (l * s) / 10);
+      laps.push({ startIndex: k === 0 ? 0 : dist.length - 10, endIndex: dist.length - 1, trigger });
+    }
+    return { ...activity('laps', Array.from(dist.keys()), dist, null, null), laps };
+  }
+  const lapEnds = (result: AlignmentResult, laps: number) =>
+    Array.from({ length: laps }, (_, k) => result.courseDist[(k + 1) * 10]);
+
+  // 25 laps of 405–425 m on the watch, 10,293 m in all.
+  const track = lapped(Array.from({ length: 25 }, (_, k) => 405 + ((k * 7) % 21)));
+  // Per-km laps of 1,005–1,020 m, then the last 1,030 m to the finish without a press.
+  const road = lapped([1012, 1008, 1015, 1020, 1005, 1011, 1018, 1009, 1013, 1030]);
+  road.laps[9]!.trigger = 'session_end';
+
+  it('snaps a track 10K to exact multiples of 400 m', () => {
+    const result = alignToDistance(track, 10_000);
+    expect(lapEnds(result, 25)).toEqual(Array.from({ length: 25 }, (_, k) => (k + 1) * 400));
+    expect(result.courseDist[5]).toBeCloseTo(200, 9);
+    expect(result.courseDist[250]).toBe(10_000);
+    expect(isMonotonic(result.courseDist)).toBe(true);
+    expect(result.warning).toEqual({
+      code: 'distance-scaling',
+      attemptId: null,
+      message: 'Placed by its 25 manual laps, each counted as exactly 0.4 km.',
+    });
+  });
+
+  it('snaps a road 10K to whole kilometres and stretches the rest to the finish', () => {
+    const result = alignToDistance(road, 10_000);
+    expect(lapEnds(result, 9)).toEqual(Array.from({ length: 9 }, (_, k) => (k + 1) * 1000));
+    expect(result.courseDist[95]).toBeCloseTo(9500, 9);
+    expect(result.courseDist[100]).toBe(10_000);
+    expect(result.warning!.message).toContain('9 manual laps');
+  });
+
+  it('scales auto laps, or any laps with snapping off, linearly', () => {
+    const auto = { ...road, laps: road.laps.map((lap) => ({ ...lap, trigger: 'distance' as const })) };
+    const result = alignToDistance(auto, 10_000);
+    const total = auto.dist[auto.dist.length - 1]!;
+    expect(result.courseDist[10]).toBeCloseTo((1012 * 10_000) / total, 9);
+    expect(result.warning!.message).toBe('Its watch distance of 10.14 km is scaled evenly to 10.00 km.');
+    expect(alignToDistance(track, 10_000, { snapLaps: false }).courseDist[10]).toBeCloseTo((405 * 10_000) / 10_293, 9);
+  });
+
+  it('falls back to linear when the manual laps are irregular or overrun the distance', () => {
+    const { activity: trail } = loadFixture('fit-two-attempts').attempts[0]!;
+    const total = trail.dist[trail.dist.length - 1]!;
+    const result = alignToDistance(trail, 54_000);
+    expect(result.courseDist[1000]).toBeCloseTo((trail.dist[1000]! * 54_000) / total, 6);
+    expect(result.warning!.message).toContain('manual laps were not used');
+    // 25 × 400 m runs past 5K, and leaves too much of a half marathon after the last lap.
+    expect(alignToDistance(track, 5000).warning!.message).toContain('scaled evenly');
+    expect(alignToDistance(track, 21_097.5).warning!.message).toContain('scaled evenly');
   });
 });
 

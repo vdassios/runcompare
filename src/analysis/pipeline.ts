@@ -125,7 +125,7 @@ function analyseGps(
 ): AttemptAnalysis | null {
   const { activity } = attempt;
   const { grid } = course;
-  const { courseDist, offCourse, overlap } = course.place(activity);
+  const { courseDist, offCourse, overlap, warning } = course.place(activity);
   // The baseline defines the course, so it is never rejected against itself.
   if (course.checkOverlap && !isBaseline && overlap < settings.minOverlap) {
     warnings.push({
@@ -135,6 +135,8 @@ function analyseGps(
     });
     return null;
   }
+
+  if (warning) warnings.push({ ...warning, attemptId: attempt.id });
 
   const series = resampleAttempt(activity, courseDist, offCourse, grid);
   const grade = gradePerSample(activity);

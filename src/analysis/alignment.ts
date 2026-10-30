@@ -6,7 +6,8 @@
  * reference polyline just ahead of the last match, so it is linear in the samples × window size.
  */
 import { bisectLeft, bisectRight } from 'd3-array';
-import type { Activity, AnalysisSettings } from '../model/types';
+import { METRES_PER_MILE, formatDistance } from '../format';
+import type { Activity, AnalysisSettings, AnalysisWarning } from '../model/types';
 import { makeLocalProjection, segmentParameter } from './geo';
 
 export interface Reference {
@@ -24,6 +25,8 @@ export interface AlignmentResult {
   courseDist: Float64Array; // m along the course, non-decreasing, within [0, length]
   offCourse: Uint8Array; // 1 = farther than the off-course threshold from the course
   overlap: number; // on-course share of the attempt's distance
+  /** `distance-scaling`: how a distance baseline placed the attempt. The caller fills in `attemptId`. */
+  warning?: AnalysisWarning;
 }
 
 const MIN_VERTEX_SPACING = 1; // m
@@ -78,18 +81,96 @@ export function buildReference(baseline: Activity): Reference {
   };
 }
 
-/** Linear scaling of the attempt's own distance onto a course of `length` metres. */
-export function alignToDistance(attempt: Activity, length: number): AlignmentResult {
+/**
+ * The attempt's own distance onto a straight course of `length` metres. When its manual laps
+ * mark a regular lap length (see {@link lapBoundaries}), each lap end lands exactly on its
+ * multiple of that length and the distance is scaled piecewise between them; otherwise the whole
+ * run is scaled linearly. The warning says which.
+ */
+export function alignToDistance(attempt: Activity, length: number, opts: { snapLaps?: boolean } = {}): AlignmentResult {
   const { dist } = attempt;
   const n = dist.length;
   const courseDist = new Float64Array(n);
   const total = n > 0 ? dist[n - 1]! : 0;
-  if (total > 0) {
-    const scale = length / total;
-    for (let i = 0; i < n; i++) courseDist[i] = Math.min(length, Math.max(0, dist[i]! * scale));
+  const laps = (opts.snapLaps ?? true) ? lapBoundaries(attempt, length) : null;
+  let message: string;
+  if (laps) {
+    // Knots: watch distance `from[j]` lands on course distance `to[j]`.
+    const m = laps.ends.length;
+    const from = [0, ...laps.ends, total];
+    const to = [...Array.from({ length: m + 1 }, (_, k) => k * laps.lap), length];
+    let j = 0;
+    for (let i = 0; i < n; i++) {
+      const d = dist[i]!;
+      // `>=` puts a lap-end sample at the start of the next piece, so it lands on k·lap exactly.
+      while (j < from.length - 2 && d >= from[j + 1]!) j++;
+      const span = from[j + 1]! - from[j]!;
+      const x = span > 0 ? to[j]! + ((d - from[j]!) / span) * (to[j + 1]! - to[j]!) : to[j]!;
+      courseDist[i] = Math.min(length, Math.max(0, x));
+    }
     courseDist[n - 1] = length;
+    message = `Placed by its ${m} manual laps, each counted as exactly ${formatLap(laps.lap)}.`;
+  } else {
+    if (total > 0) {
+      const scale = length / total;
+      for (let i = 0; i < n; i++) courseDist[i] = Math.min(length, Math.max(0, dist[i]! * scale));
+      courseDist[n - 1] = length;
+    }
+    message = `Its watch distance of ${formatDistance(total, 'metric')} is scaled evenly to ${formatDistance(length, 'metric')}.`;
+    if (attempt.laps.some((lap) => lap.trigger === 'manual')) {
+      message += ' Its manual laps were not used: they do not mark a regular lap length.';
+    }
   }
-  return { courseDist, offCourse: new Uint8Array(n), overlap: 1 };
+  return {
+    courseDist,
+    offCourse: new Uint8Array(n),
+    overlap: 1,
+    warning: { code: 'distance-scaling', attemptId: null, message },
+  };
+}
+
+/** Lap lengths a lap button is pressed at: a track lap, a kilometre, a mile. */
+const STANDARD_LAPS = [400, 1000, METRES_PER_MILE];
+/** Every manual lap is within this share of their median, and a median this close to a standard lap is that lap. */
+const LAP_TOLERANCE = 0.08;
+const MIN_MANUAL_LAPS = 3;
+/** The stretch after the last lap is shorter than this many laps. */
+const MAX_REMAINDER = 1.5;
+
+/**
+ * The lap length and the watch distance at the end of each manual lap, when the manual laps
+ * mark regular boundaries on a course of `length` metres; null otherwise (PLAN §5.5, task 35).
+ *
+ * A lap's watch distance runs from the previous manual lap's end (0 for the first), so a manual
+ * lap that doesn't start where the last one ended (another lap in between) reads long and fails.
+ */
+function lapBoundaries(attempt: Activity, length: number): { lap: number; ends: number[] } | null {
+  const { dist } = attempt;
+  // A lap past the samples (a cut activity) reads NaN and fails every check below.
+  const ends = attempt.laps.filter((lap) => lap.trigger === 'manual').map((lap) => dist[lap.endIndex] ?? NaN);
+  if (ends.length < MIN_MANUAL_LAPS) return null;
+
+  const lengths = ends.map((end, k) => end - (k > 0 ? ends[k - 1]! : 0));
+  const sorted = [...lengths].sort((a, b) => a - b);
+  const mid = sorted.length >> 1;
+  const median = sorted.length % 2 ? sorted[mid]! : (sorted[mid - 1]! + sorted[mid]!) / 2;
+  if (!(median > 0) || !lengths.every((l) => Math.abs(l - median) <= LAP_TOLERANCE * median)) return null;
+
+  const lap =
+    STANDARD_LAPS.find((s) => Math.abs(median - s) <= LAP_TOLERANCE * s) ??
+    Math.max(100, Math.round(median / 100) * 100);
+  const last = ends.length * lap;
+  const remainder = length - last;
+  if (remainder < 0 || remainder >= MAX_REMAINDER * lap) return null;
+  // Course left after the last lap needs watch distance after it to stretch over.
+  const total = dist[dist.length - 1]!;
+  if (remainder > 0 && !(total > ends[ends.length - 1]!)) return null;
+  return { lap, ends };
+}
+
+/** "0.4 km", "1.0 km", "1.0 mi". */
+function formatLap(lap: number): string {
+  return formatDistance(lap, lap === METRES_PER_MILE ? 'imperial' : 'metric', { decimals: 1 });
 }
 
 export function alignToCourse(attempt: Activity, ref: Reference, settings: AnalysisSettings): AlignmentResult {
