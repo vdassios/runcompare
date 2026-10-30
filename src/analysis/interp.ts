@@ -7,9 +7,12 @@ import { bisectLeft } from 'd3-array';
 /**
  * Linear interpolation of `ys` over `xs` at `x`. `xs` is non-decreasing and finite.
  * - On a plateau (repeated x) it returns the value at the **first** sample that reaches x.
- * - Outside `[xs[0], xs[end]]` it clamps to the nearest end value.
+ * - Below the first sample it returns the first sample's value. Above the last, it returns the
+ *   value where the samples first reach their furthest x: the first sample of the end plateau,
+ *   so as `time(d)` a runner standing still at the end (or stopping short of it) adds no time.
  * - Samples whose y is NaN are skipped: x is interpolated between the nearest finite
- *   neighbours. NaN only when `x` is NaN or `ys` has no finite value.
+ *   neighbours, and the ends above are those of the finite samples. NaN only when `x` is NaN
+ *   or `ys` has no finite value.
  */
 export function interpolateAt(xs: ArrayLike<number>, ys: ArrayLike<number>, x: number): number {
   const n = Math.min(xs.length, ys.length);
@@ -22,7 +25,13 @@ export function interpolateAt(xs: ArrayLike<number>, ys: ArrayLike<number>, x: n
   let before = i - 1;
   while (before >= 0 && !Number.isFinite(ys[before]!)) before--;
 
-  if (after === n) return before >= 0 ? ys[before]! : NaN;
+  if (after === n) {
+    if (before < 0) return NaN;
+    // Beyond the last finite sample: the first finite one on its plateau.
+    let first = bisectLeft(xs, xs[before]!, 0, before);
+    while (!Number.isFinite(ys[first]!)) first++;
+    return ys[first]!;
+  }
   const xa = xs[after]!;
   const ya = ys[after]!;
   if (before < 0 || xa === x) return ya;

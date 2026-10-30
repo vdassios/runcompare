@@ -35,6 +35,23 @@ describe('interpolateAt', () => {
     expect(interpolateAt([0, 0, 10], [2, 4, 6], 0)).toBe(2);
   });
 
+  it('returns the first arrival at the end plateau above the last sample', () => {
+    // A runner stops 2 m short of the end and stands there: time beyond is the arrival time.
+    const d = [0, 10, 18, 18, 18];
+    const t = [0, 5, 9, 60, 120];
+    expect(interpolateAt(d, t, 20)).toBe(9);
+    expect(interpolateAt(d, t, 1e6)).toBe(9);
+    expect(interpolateAt([0, 0, 0], [2, 4, 6], 1)).toBe(2);
+  });
+
+  it('skips NaN ys on the end plateau', () => {
+    // First finite y on the plateau, not the plateau's first sample.
+    expect(interpolateAt([0, 10, 18, 18, 18], [0, 5, NaN, 60, 120], 20)).toBe(60);
+    // Trailing NaN samples further on: the end is the last finite sample's plateau.
+    expect(interpolateAt([0, 10, 10, 18], [0, 5, 7, NaN], 20)).toBe(5);
+    expect(interpolateAt([0, 10, 10, 18], [0, 5, 7, NaN], 12)).toBe(5);
+  });
+
   it('handles empty and single-sample input', () => {
     expect(interpolateAt([], [], 1)).toBeNaN();
     expect(interpolateAt([5], [3], 0)).toBe(3);
@@ -66,6 +83,11 @@ describe('resampleOnto', () => {
 
   it('keeps the plateau rule', () => {
     expect(Array.from(resampleOnto([0, 10, 10, 20], [0, 1, 5, 6], [10]))).toEqual([1]);
+  });
+
+  it('keeps the first arrival above the last sample, after dropping NaN pairs', () => {
+    const out = resampleOnto([0, 10, 18, 18, NaN, 18], [0, 5, NaN, 60, 90, 120], [18, 20]);
+    expect(Array.from(out)).toEqual([60, 60]);
   });
 
   it('drops samples with NaN x or y and bridges the gap', () => {

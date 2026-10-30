@@ -1,3 +1,7 @@
+/**
+ * The page frame: the header bar, then every section in PLAN §6 order in one column, capped at
+ * `max-w-7xl` with a 16 px gutter on phones. Sections that render nothing take no space.
+ */
 import type { ComponentType } from 'react';
 import { AttemptList } from './AttemptList';
 import { ClimbsTable } from './ClimbsTable';
@@ -10,9 +14,8 @@ import { SplitsTable } from './SplitsTable';
 import { SummaryCards } from './SummaryCards';
 import { UploadPanel } from './UploadPanel';
 
-/** Sections in PLAN §6 order. Tests find sections by `data-section`. */
+/** Tests find sections by `data-section`. */
 const SECTIONS: readonly { name: string; Component: ComponentType }[] = [
-  { name: 'header', Component: Header },
   { name: 'upload-panel', Component: UploadPanel },
   { name: 'attempt-list', Component: AttemptList },
   { name: 'split-set-editor', Component: SplitSetEditor },
@@ -24,14 +27,23 @@ const SECTIONS: readonly { name: string; Component: ComponentType }[] = [
   { name: 'insights-panel', Component: InsightsPanel },
 ];
 
+const COLUMN = 'mx-auto w-full max-w-7xl px-4 md:px-6';
+
 export function Dashboard() {
   return (
-    <main className="mx-auto flex max-w-7xl flex-col gap-6 px-4 py-6">
-      {SECTIONS.map(({ name, Component }) => (
-        <section key={name} data-section={name}>
-          <Component />
-        </section>
-      ))}
-    </main>
+    <div className="min-h-screen bg-background text-text">
+      <div data-section="header" className="border-b border-border bg-surface">
+        <div className={COLUMN}>
+          <Header />
+        </div>
+      </div>
+      <main className={`${COLUMN} flex flex-col gap-6 py-6`}>
+        {SECTIONS.map(({ name, Component }) => (
+          <section key={name} data-section={name} className="min-w-0 empty:hidden">
+            <Component />
+          </section>
+        ))}
+      </main>
+    </div>
   );
 }

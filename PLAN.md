@@ -149,7 +149,7 @@ Apply a 5-sample median filter to elevation, resample by distance, then take a m
 - **Walking:** moving with cadence < 130 spm. With no cadence it is **estimated**: moving, speed < 1.667 m/s (6 km/h) and grade > 0.10. Walking share = walking time / moving time.
 - **Average HR** is over moving time.
 - **Decoupling:** the ratio (GAP speed / HR) for the first half versus the second half of moving time. `(r1 − r2) / r1`, so a positive value means HR drifted up.
-- **Cadence fade:** mean cadence while running (moving and not walking) in the last quarter, compared with the first quarter, as a fraction.
+- **Cadence fade:** `(c1 − c4) / c1`, with `c` the mean cadence while running (moving and not walking) in the first and last quarter. A positive value means cadence dropped.
 - **Ascent and descent** come from the attempt's own smoothed elevation.
 
 ### 5.9 Splits
@@ -159,22 +159,25 @@ Boundaries are every `splitLength(units)` (1,000 m or 1,609.344 m) plus `L`, or 
 - Splits that touch off-course points are shown greyed out as "not comparable".
 
 ### 5.10 Climbs and descents (course baseline only)
-On `grid.ele`, a climb is a stretch with cumulative gain ≥ 50 m and average grade ≥ 4 %, allowing dips < 10 m inside it. Descents are the mirror image. For each attempt and segment: time, delta, VAM (m/h) on climbs, and descent rate (m/h) on descents.
+On `grid.ele`, a climb is a stretch with cumulative gain ≥ 50 m and average grade ≥ 4 %, allowing dips < 10 m inside it. A flat stretch (≥ 500 m at < 2 % average grade) ends it, and each piece is trimmed to its own low and high points. Descents are the mirror image. For each attempt and segment: time, delta, VAM (m/h) on climbs, and descent rate (m/h) on descents.
 
 ### 5.11 Insight rules
-Each rule cites its numbers and returns the course ranges it is about.
+Insights compare an attempt with the **baseline**, never with itself: "you walked 22 % more than 2024 on the climbs at 12, 31 and 44 km", not "you walked a lot late". The baseline gets no insights of its own. Each rule names the baseline by its label, cites its numbers and returns the course ranges it is about.
 
-| Rule | Fires when |
-|---|---|
-| `went-out-too-hard` | First-third average GAP > 5 % faster than the whole-race average **and** last third > 8 % slower. |
-| `fade` | GAP > 15 % slower than the race median for ≥ 3 km **while HR over that span is > 5 % below the preceding 3 km** (described as a bonk). Without HR it reports a plain fade at `info`. |
-| `cardiac-drift` | Decoupling > 5 % gives `warn`, > 10 % gives `strong`. |
-| `cadence-fade` | Cadence fade < −5 %. |
-| `walking-late` | Walking share in the last third minus the first third > 15 points. Compared across attempts. |
-| `stopped-time` | Stopped time differs from the baseline by > 2 min. |
-| `terrain-attribution` | Splits the total delta into climbs, descents and flats and names the one that dominates. |
-| `vs-split-set` | The 3 marker intervals with the largest deficit against a split set, given as relative pace %. |
-| `top-sections` | The top 5 non-overlapping 1 km windows where time was gained and lost, excluding off-course points. |
+Rules run for every GPS attempt except the baseline and ignore points where the attempt is off-course. Rules that need the baseline's own streams or metrics (moving, HR, cadence, walking) need a **course baseline** and skip a split-set one; `vs-split-set` is the rule for split-set baselines. "Slower over a stretch" compares **moving time** over the same course metres, so a stop isn't counted as slow running (`stopped-time` reports stops).
+
+| Rule | Fires when | Severity |
+|---|---|---|
+| `pacing` | Over the course thirds (by distance), the attempt was > 3 % faster than the baseline in the first third **and** > 5 % slower in the last. | `warn`, `strong` when the last third is > 10 % slower |
+| `lost-ground` | A stretch of ≥ 3 km where the 1 km rolling median of the attempt's moving time over the baseline's is > 1.10. Up to 2 stretches, the longest. With HR on both: a bonk when the attempt's HR relative to the baseline's fell > 5 % from the 3 km before. | `warn`, `strong` for a bonk |
+| `cardiac-drift` | The attempt's decoupling minus the baseline's > 5 points. | `warn`, `strong` above 10 points |
+| `cadence-fade` | The attempt's cadence fade minus the baseline's > 5 points. Neither may be estimated. | `warn` |
+| `walking` | Climbs where the attempt's walking share is > 15 points above the baseline's. Up to 3, the largest. "(estimated)" in the title when either side's walking is estimated. | `warn` |
+| `climbs` | The 3 climbs with the most time gained and the 3 with the most lost against the baseline, with relative pace %. | `info` |
+| `stopped-time` | Stopped time differs from the baseline by > 2 min. | `info` |
+| `terrain-attribution` | Splits the total delta into climbs, descents and flats and names the one that dominates. | `info`, `warn` when one explains > 60 % of a total delta over ±2 min |
+| `top-sections` | The top 5 non-overlapping 1 km windows where time was gained and lost, excluding off-course points. | `info` |
+| `vs-split-set` | Split-set baseline only: the 3 marker intervals with the largest deficit, given as relative pace %. | `warn` when the worst is > 10 % |
 
 ---
 
@@ -245,3 +248,4 @@ The race is a trail race near Olympus with about 2,780 m D+. 2025 against a 2024
 - **Insight rules as one file each, picked up by a glob:** rule tasks never edit a shared registry file.
 - **Finish delta uses first arrival, the Time card uses elapsed time:** standing at the finish before stopping the watch isn't racing, so the ghost delta and splits leave it out. The Time card still compares what the watch recorded.
 - **Raw samples are never committed:** `samples/` is gitignored. Only the sanitized `fixtures/` go in. The repo is public.
+- **Insights are relative to the baseline:** the owner compares attempts, so an absolute "you faded" says nothing the comparison doesn't. Each insight states what differed from the baseline and where.

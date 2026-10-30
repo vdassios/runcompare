@@ -1,4 +1,5 @@
 import { create } from 'zustand';
+import { validateSplitSet } from '../analysis/splitSets';
 import { defaultUnits } from '../format';
 import {
   DEFAULT_SETTINGS,
@@ -9,6 +10,7 @@ import {
   type Baseline,
   type GpsAttempt,
   type SplitSet,
+  type SplitsAttempt,
   type UnitSystem,
 } from '../model/types';
 import { nextAttemptColor } from '../theme';
@@ -84,10 +86,6 @@ function initialTheme(): AppState['theme'] {
   return stored === 'light' || stored === 'dark' || stored === 'system' ? stored : 'system';
 }
 
-function notImplemented(task: string): never {
-  throw new Error(`Not implemented: task ${task}`);
-}
-
 const LABEL_FORMAT = new Intl.DateTimeFormat('en-GB', {
   day: 'numeric',
   month: 'short',
@@ -107,12 +105,27 @@ function errorMessage(error: unknown, fileName: string): string {
   return `"${fileName}" can't be read: ${error instanceof Error ? error.message : String(error)}`;
 }
 
-/** The earliest GPS attempt by start time, as a course baseline. */
+/**
+ * The earliest GPS attempt by start time, as a course baseline, or null. Also the fallback when
+ * the baseline is removed, whatever its kind: split sets alone never become a baseline by themselves.
+ */
 function defaultBaseline(attempts: Attempt[]): Baseline | null {
   const gps = attempts.filter((a): a is GpsAttempt => a.kind === 'gps');
   if (gps.length === 0) return null;
   const earliest = gps.reduce((a, b) => (b.activity.startTime < a.activity.startTime ? b : a));
   return { kind: 'course', attemptId: earliest.id };
+}
+
+/** A split set as a custom distance baseline that ends at its last marker. */
+function splitSetBaseline(attempt: SplitsAttempt): Baseline {
+  const { markers } = attempt.splitSet;
+  return { kind: 'distance', attemptId: attempt.id, preset: 'custom', distance: markers[markers.length - 1]!.distance };
+}
+
+/** The editor validates first, so an invalid set here is a programming error. */
+function assertValidSplitSet(splitSet: SplitSet): void {
+  const problems = validateSplitSet(splitSet);
+  if (problems.length > 0) throw new RangeError(`Invalid split set: ${problems.join(' ')}`);
 }
 
 /** Keeps `current` while it is a non-baseline attempt, else the first non-baseline attempt. */
@@ -194,8 +207,25 @@ export function createAppStore() {
         const attempts = [...get().attempts, ...added];
         await commit(attempts, get().baseline ?? defaultBaseline(attempts));
       },
-      addSplitSet: () => notImplemented('21'),
-      updateSplitSet: () => notImplemented('21'),
+      addSplitSet: (splitSet, label) => {
+        assertValidSplitSet(splitSet);
+        const { attempts, baseline } = get();
+        const attempt: SplitsAttempt = {
+          id: `attempt-${++attemptCounter}`,
+          kind: 'splits',
+          label: label ?? splitSet.name,
+          color: nextAttemptColor(attempts.map((a) => a.color)),
+          splitSet,
+        };
+        void commit([...attempts, attempt], baseline ?? splitSetBaseline(attempt));
+        return attempt.id;
+      },
+      updateSplitSet: (id, splitSet) => {
+        assertValidSplitSet(splitSet);
+        const { attempts, baseline } = get();
+        const updated = attempts.map((a) => (a.id === id && a.kind === 'splits' ? { ...a, splitSet } : a));
+        void commit(updated, baseline);
+      },
       updateAttempt: (id, patch) =>
         set((s) => ({
           attempts: s.attempts.map((a) => (a.id === id ? { ...a, ...patch } : a)),
