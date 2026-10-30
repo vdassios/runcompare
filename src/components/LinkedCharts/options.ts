@@ -249,7 +249,7 @@ function chart(
   const slider = ctx.visible[ctx.visible.length - 1] === id;
   return {
     animation: false,
-    textStyle: { fontFamily: 'Inter, ui-sans-serif, system-ui, sans-serif' },
+    textStyle: { fontFamily: '"Inter Variable", Inter, ui-sans-serif, system-ui, sans-serif' },
     title: { text: title, left: 8, top: 6, textStyle: { color: colors.text, fontSize: 12, fontWeight: 600 } },
     grid: {
       left: GRID.left,

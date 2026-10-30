@@ -17,7 +17,8 @@ import {
 } from 'react';
 import { useStore } from '../../store/useStore';
 import { useResolvedTheme } from '../../theme';
-import { CHART_GROUP, EChartsReact, echarts } from './echarts';
+import { EChart } from './EChart';
+import { CHART_GROUP } from './echarts';
 import { HoverReadout } from './HoverReadout';
 import {
   createHoverSync,
@@ -304,10 +305,8 @@ const ChartBox = memo(function ChartBox({ spec, slider, onReady, onUnmount, onEv
       // 180 px per chart on desktop, 150 px on mobile; the bottom chart adds the slider's 40 px.
       className={slider ? 'h-[190px] md:h-[220px]' : 'h-[150px] md:h-[180px]'}
     >
-      <EChartsReact
-        echarts={echarts}
+      <EChart
         option={spec.option}
-        notMerge
         style={FILL}
         onEvents={onEvents}
         onChartReady={(chart: EChartsType) => onReady(id, chart)}

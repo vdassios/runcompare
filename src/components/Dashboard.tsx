@@ -7,16 +7,18 @@ import { AttemptList } from './AttemptList';
 import { ClimbsTable } from './ClimbsTable';
 import { Header } from './Header';
 import { InsightsPanel } from './InsightsPanel';
-import { RouteMap } from './RouteMap';
+import { loadLinkedCharts, loadRouteMap } from './resultSections';
 import { SplitSetEditor } from './SplitSetEditor';
 import { SplitsTable } from './SplitsTable';
 import { SummaryCards } from './SummaryCards';
 import { UploadPanel } from './UploadPanel';
 import { useStore } from '../store/useStore';
 
-// ECharts is most of the bundle, so the charts load as their own chunk. `lazy` fetches on first
-// render, so sections marked `needsAnalysis` mount only once there is an analysis to show.
-const LinkedCharts = lazy(() => import('./LinkedCharts').then((m) => ({ default: m.LinkedCharts })));
+// ECharts and Leaflet are most of the bundle, so the charts and the map load as their own chunks.
+// `lazy` fetches on first render, so sections marked `needsAnalysis` mount only once there is an
+// analysis to show.
+const RouteMap = lazy(() => loadRouteMap().then((m) => ({ default: m.RouteMap })));
+const LinkedCharts = lazy(() => loadLinkedCharts().then((m) => ({ default: m.LinkedCharts })));
 
 /** Tests find sections by `data-section`. */
 const SECTIONS: readonly { name: string; Component: ComponentType; needsAnalysis?: boolean }[] = [
@@ -24,7 +26,7 @@ const SECTIONS: readonly { name: string; Component: ComponentType; needsAnalysis
   { name: 'attempt-list', Component: AttemptList },
   { name: 'split-set-editor', Component: SplitSetEditor },
   { name: 'summary-cards', Component: SummaryCards },
-  { name: 'route-map', Component: RouteMap },
+  { name: 'route-map', Component: RouteMap, needsAnalysis: true },
   { name: 'linked-charts', Component: LinkedCharts, needsAnalysis: true },
   { name: 'splits-table', Component: SplitsTable },
   { name: 'climbs-table', Component: ClimbsTable },
