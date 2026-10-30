@@ -15,6 +15,7 @@ import {
 } from '../model/types';
 import { nextAttemptColor } from '../theme';
 import { analyzeInWorker, parseInWorker } from '../worker/client';
+import { persistSession, restoreSession } from './persistence';
 
 export interface AppState {
   attempts: Attempt[];
@@ -99,6 +100,14 @@ export function attemptLabel(startTime: number): string {
 }
 
 let attemptCounter = 0;
+
+/** Restored attempts keep their ids, so a new one skips any id already taken. */
+function newAttemptId(attempts: Attempt[]): AttemptId {
+  let id: AttemptId;
+  do id = `attempt-${++attemptCounter}`;
+  while (attempts.some((a) => a.id === id));
+  return id;
+}
 
 function errorMessage(error: unknown, fileName: string): string {
   if (error instanceof Error && error.name === 'UnsupportedFileError') return error.message;
@@ -200,7 +209,7 @@ export function createAppStore() {
           }
           const color = nextAttemptColor(colors);
           colors.push(color);
-          const id = `attempt-${++attemptCounter}`;
+          const id = newAttemptId(get().attempts);
           added.push({ id, kind: 'gps', label: attemptLabel(p.value.startTime), color, activity: p.value });
         });
         if (errors.length > 0) set((s) => ({ errors: [...s.errors, ...errors] }));
@@ -211,7 +220,7 @@ export function createAppStore() {
         assertValidSplitSet(splitSet);
         const { attempts, baseline } = get();
         const attempt: SplitsAttempt = {
-          id: `attempt-${++attemptCounter}`,
+          id: newAttemptId(attempts),
           kind: 'splits',
           label: label ?? splitSet.name,
           color: nextAttemptColor(attempts.map((a) => a.color)),
@@ -267,3 +276,8 @@ export function createAppStore() {
 }
 
 export const useStore = createAppStore();
+
+/** Resolves once the last session is back in the store; from then on changes are saved (task 36). */
+export const sessionRestored = restoreSession(useStore).then((available) => {
+  if (available) persistSession(useStore);
+});
